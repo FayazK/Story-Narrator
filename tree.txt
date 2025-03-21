@@ -2,7 +2,20 @@
 ./README.md
 ./analysis_options.yaml
 ./lib
+./lib/database
+./lib/database/database_helper.dart
 ./lib/main.dart
+./lib/models
+./lib/models/character.dart
+./lib/models/script.dart
+./lib/models/story.dart
+./lib/models/story_scene.dart
+./lib/services
+./lib/services/elevenlabs_service.dart
+./lib/services/gemini_service.dart
+./lib/services/story_service.dart
+./lib/utils
+./lib/utils/xml_parser.dart
 ./linux
 ./linux/CMakeLists.txt
 ./linux/flutter
@@ -85,4 +98,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-25 directories, 61 files
+29 directories, 70 files

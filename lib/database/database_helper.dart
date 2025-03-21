@@ -1,7 +1,9 @@
 // lib/database/database_helper.dart
 import 'dart:async';
+import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/story.dart';
 import '../models/character.dart';
 import '../models/story_scene.dart';
@@ -22,9 +24,14 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'story_narrator.db');
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String dbPath = join(documentsDirectory.path, 'databases', 'story_narrator.db');
+    
+    // Ensure the directory exists
+    Directory(dirname(dbPath)).create(recursive: true);
+    
     return await openDatabase(
-      path,
+      dbPath,
       version: 1,
       onCreate: _createDatabase,
     );
@@ -334,5 +341,12 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+  
+  /// Check if the database exists
+  Future<bool> databaseExists() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String dbPath = join(documentsDirectory.path, 'databases', 'story_narrator.db');
+    return File(dbPath).exists();
   }
 }
