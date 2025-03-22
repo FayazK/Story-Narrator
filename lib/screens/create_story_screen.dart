@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/content_container.dart';
+import '../services/gemini_service.dart';
+import '../prompts/story_generation_prompt.dart';
 
 class CreateStoryScreen extends StatefulWidget {
   const CreateStoryScreen({super.key});
@@ -15,16 +18,12 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   final TextEditingController _storyIdeaController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   
-  // Form values
-  String _selectedGenre = 'Fantasy';
-  String _selectedEra = 'Modern';
-  String _selectedSetting = 'Urban';
+  // Form values - all optional
+  String? _selectedGenre;
+  String? _selectedEra;
+  String? _selectedSetting;
   bool _isHistorical = false;
-  int _characterCount = 2;
-  
-  // Character names - expandable based on character count
-  List<String> _characterNames = ['', ''];
-  List<String> _characterRoles = ['Protagonist', 'Antagonist'];
+  String _characterInformation = '';
   
   // Available options for dropdowns
   final List<String> _genres = [
@@ -50,6 +49,144 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     _storyIdeaController.dispose();
     _titleController.dispose();
     super.dispose();
+  }
+  
+  /// Generate a story using Gemini API
+  Future<void> _generateStory() async {
+    // Check if the story idea is empty
+    if (_storyIdeaController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a story idea')),
+      );
+      return;
+    }
+    
+    // Show loading indicator
+    _showLoadingDialog();
+    
+    try {
+      // Get the Gemini service instance
+      final geminiService = GeminiService();
+      
+      // Prepare the user message with all inputs
+      final String userMessage = _buildUserMessage();
+      
+      // Get the system prompt
+      final String systemPrompt = StoryGenerationPrompt.getSystemPrompt();
+      
+      // Generate the story
+      final story = await geminiService.generateStory(systemPrompt, userMessage);
+      
+      // Hide loading dialog
+      Navigator.of(context).pop();
+      
+      // Navigate to story view or save it
+      // TODO: Implement save and view functionality
+      
+      // For now, just show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Story generated successfully!')),
+      );
+      
+      // Print the generated story to console for now
+      print('Generated Story:\n$story');
+      
+    } catch (e) {
+      // Hide loading dialog
+      Navigator.of(context).pop();
+      
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating story: ${e.toString()}')),
+      );
+    }
+  }
+  
+  /// Build the user message from all form inputs
+  String _buildUserMessage() {
+    final StringBuffer message = StringBuffer();
+    
+    // Add the story idea
+    message.writeln('Story Idea: ${_storyIdeaController.text.trim()}');
+    message.writeln();
+    
+    // Add title if provided
+    if (_titleController.text.isNotEmpty) {
+      message.writeln('Title: ${_titleController.text.trim()}');
+      message.writeln();
+    }
+    
+    // Add genre if selected
+    if (_selectedGenre != null && _selectedGenre!.isNotEmpty) {
+      message.writeln('Genre: $_selectedGenre');
+    }
+    
+    // Add era if selected
+    if (_selectedEra != null && _selectedEra!.isNotEmpty) {
+      message.writeln('Era: $_selectedEra');
+    }
+    
+    // Add setting if selected
+    if (_selectedSetting != null && _selectedSetting!.isNotEmpty) {
+      message.writeln('Setting: $_selectedSetting');
+    }
+    
+    // Add historical flag if selected
+    if (_isHistorical) {
+      message.writeln('Include Historical Elements: Yes');
+    }
+    
+    // Add character information if provided
+    if (_characterInformation.isNotEmpty) {
+      message.writeln();
+      message.writeln('Characters:');
+      message.writeln(_characterInformation);
+    }
+    
+    return message.toString();
+  }
+  
+  /// Show a loading dialog while generating the story
+  void _showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          elevation: 8,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16),
+                CircularProgressIndicator(color: AppColors.primary),
+                const SizedBox(height: 24),
+                Text(
+                  'Generating your story...',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This may take a moment as our AI crafts your narrative.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textMedium,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -280,7 +417,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         children: [
           // Genre dropdown
           const Text(
-            'Genre',
+            'Genre (optional)',
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -293,6 +430,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              hintText: 'Select a genre (optional)',
             ),
             items: _genres.map((genre) {
               return DropdownMenuItem<String>(
@@ -302,7 +440,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             }).toList(),
             onChanged: (value) {
               setState(() {
-                _selectedGenre = value!;
+                _selectedGenre = value;
               });
             },
           ),
@@ -310,7 +448,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           
           // Era dropdown
           const Text(
-            'Era',
+            'Era (optional)',
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -323,6 +461,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              hintText: 'Select an era (optional)',
             ),
             items: _eras.map((era) {
               return DropdownMenuItem<String>(
@@ -332,7 +471,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             }).toList(),
             onChanged: (value) {
               setState(() {
-                _selectedEra = value!;
+                _selectedEra = value;
               });
             },
           ),
@@ -340,7 +479,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           
           // Setting dropdown
           const Text(
-            'Setting',
+            'Setting (optional)',
             style: TextStyle(
               fontWeight: FontWeight.bold,
             ),
@@ -353,6 +492,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              hintText: 'Select a setting (optional)',
             ),
             items: _settings.map((setting) {
               return DropdownMenuItem<String>(
@@ -362,7 +502,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             }).toList(),
             onChanged: (value) {
               setState(() {
-                _selectedSetting = value!;
+                _selectedSetting = value;
               });
             },
           ),
@@ -406,35 +546,17 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Characters',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline),
-                tooltip: 'Add Character',
-                onPressed: () {
-                  if (_characterCount < 10) {
-                    setState(() {
-                      _characterCount++;
-                      _characterNames.add('');
-                      _characterRoles.add('Supporting Character');
-                    });
-                  }
-                },
-              ),
-            ],
+          Text(
+            'Characters',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Define key characters in your story (optional)',
+            'Describe your characters and their roles (optional)',
             style: TextStyle(
               fontSize: 14,
               color: AppColors.textMedium,
@@ -442,69 +564,24 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           ),
           const SizedBox(height: 16),
           
-          // Character list
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _characterCount,
-            itemBuilder: (context, index) {
-              return _buildCharacterInput(index);
+          // Character text area
+          TextField(
+            controller: TextEditingController(),
+            maxLines: 6,
+            decoration: InputDecoration(
+              hintText: 'Example:\n- Sarah: 28-year-old detective with a mysterious past\n- Marcus: Town sheriff hiding dark secrets\n- Emily: Local librarian who discovers an ancient artifact',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.all(16),
+            ),
+            onChanged: (value) {
+              // Store character information as free-form text
+              setState(() {
+                _characterInformation = value;
+              });
             },
           ),
-        ],
-      ),
-    );
-  }
-
-  // Individual character input row
-  Widget _buildCharacterInput(int index) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-              onChanged: (value) {
-                _characterNames[index] = value;
-              },
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 3,
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Role',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-              controller: TextEditingController(text: _characterRoles[index]),
-              onChanged: (value) {
-                _characterRoles[index] = value;
-              },
-            ),
-          ),
-          if (index > 1) // First two characters can't be removed
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-              onPressed: () {
-                setState(() {
-                  _characterNames.removeAt(index);
-                  _characterRoles.removeAt(index);
-                  _characterCount--;
-                });
-              },
-            ),
         ],
       ),
     );
@@ -536,7 +613,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           const SizedBox(width: 16),
           ElevatedButton(
             onPressed: () {
-              // TODO: Save and generate story
+              _generateStory();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

@@ -19,7 +19,10 @@
 ./lib/models/script.dart
 ./lib/models/story.dart
 ./lib/models/story_scene.dart
+./lib/prompts
+./lib/prompts/story_generation_prompt.dart
 ./lib/screens
+./lib/screens/create_story_screen.dart
 ./lib/screens/home_screen.dart
 ./lib/screens/settings_screen.dart
 ./lib/services
@@ -128,4 +131,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-38 directories, 91 files
+39 directories, 93 files
