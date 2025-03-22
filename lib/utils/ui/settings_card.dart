@@ -8,6 +8,7 @@ class SettingsCard extends StatelessWidget {
   final IconData icon;
   final Widget child;
   final bool isExpanded;
+  final Widget? trailing;
   
   const SettingsCard({
     super.key,
@@ -16,6 +17,7 @@ class SettingsCard extends StatelessWidget {
     required this.icon,
     required this.child,
     this.isExpanded = false,
+    this.trailing,
   });
 
   @override
@@ -32,14 +34,6 @@ class SettingsCard extends StatelessWidget {
             offset: const Offset(0, 4),
           ),
         ],
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            Colors.grey.shade50,
-          ],
-        ),
       ),
       child: ExpansionTile(
         initiallyExpanded: isExpanded,
@@ -94,6 +88,10 @@ class SettingsCard extends StatelessWidget {
                 ],
               ),
             ),
+            
+            // Optional trailing widget
+            if (trailing != null)
+              trailing!,
           ],
         ),
         children: [child],

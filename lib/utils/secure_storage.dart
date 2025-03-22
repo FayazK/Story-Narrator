@@ -1,39 +1,76 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Storage manager for API keys and app settings
+/// Uses SharedPreferences with simple encryption for API keys
 class SecureStorageManager {
   static const String _geminiApiKeyKey = 'gemini_api_key';
   static const String _elevenlabsApiKeyKey = 'elevenlabs_api_key';
   static const String _selectedGeminiModelKey = 'selected_gemini_model';
+  static const String _keyConfiguredKey = 'key_configured';
   
-  // Secure storage for API keys
-  static final FlutterSecureStorage _secureStorage = FlutterSecureStorage(
-    aOptions: const AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
-  );
+  // Simple encryption/obfuscation for API keys (not truly secure but better than plaintext)
+  static String _encrypt(String text) {
+    final result = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      final char = text.codeUnitAt(i);
+      result.write(String.fromCharCode(char + 7)); // Basic Caesar cipher
+    }
+    return result.toString();
+  }
   
-  // Save Gemini API key securely
+  // Decrypt the encrypted text
+  static String _decrypt(String text) {
+    final result = StringBuffer();
+    for (int i = 0; i < text.length; i++) {
+      final char = text.codeUnitAt(i);
+      result.write(String.fromCharCode(char - 7));
+    }
+    return result.toString();
+  }
+  
+  // Save Gemini API key
   static Future<void> saveGeminiApiKey(String apiKey) async {
-    await _secureStorage.write(key: _geminiApiKeyKey, value: apiKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_geminiApiKeyKey, _encrypt(apiKey));
+    await prefs.setBool('${_keyConfiguredKey}_gemini', true);
   }
   
   // Get Gemini API key
   static Future<String?> getGeminiApiKey() async {
-    return await _secureStorage.read(key: _geminiApiKeyKey);
+    final prefs = await SharedPreferences.getInstance();
+    final encrypted = prefs.getString(_geminiApiKeyKey);
+    if (encrypted == null) return null;
+    return _decrypt(encrypted);
   }
   
-  // Save ElevenLabs API key securely
+  // Check if Gemini API key is configured
+  static Future<bool> isGeminiKeyConfigured() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('${_keyConfiguredKey}_gemini') ?? false;
+  }
+  
+  // Save ElevenLabs API key
   static Future<void> saveElevenlabsApiKey(String apiKey) async {
-    await _secureStorage.write(key: _elevenlabsApiKeyKey, value: apiKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_elevenlabsApiKeyKey, _encrypt(apiKey));
+    await prefs.setBool('${_keyConfiguredKey}_elevenlabs', true);
   }
   
   // Get ElevenLabs API key
   static Future<String?> getElevenlabsApiKey() async {
-    return await _secureStorage.read(key: _elevenlabsApiKeyKey);
+    final prefs = await SharedPreferences.getInstance();
+    final encrypted = prefs.getString(_elevenlabsApiKeyKey);
+    if (encrypted == null) return null;
+    return _decrypt(encrypted);
   }
   
-  // Save selected Gemini model using shared preferences (not sensitive)
+  // Check if ElevenLabs API key is configured
+  static Future<bool> isElevenlabsKeyConfigured() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('${_keyConfiguredKey}_elevenlabs') ?? false;
+  }
+  
+  // Save selected Gemini model using shared preferences
   static Future<void> saveSelectedGeminiModel(String modelName) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_selectedGeminiModelKey, modelName);
@@ -47,8 +84,11 @@ class SecureStorageManager {
   
   // Clear all saved API keys (for logging out or resetting)
   static Future<void> clearAllKeys() async {
-    await _secureStorage.deleteAll();
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_geminiApiKeyKey);
+    await prefs.remove(_elevenlabsApiKeyKey);
     await prefs.remove(_selectedGeminiModelKey);
+    await prefs.remove('${_keyConfiguredKey}_gemini');
+    await prefs.remove('${_keyConfiguredKey}_elevenlabs');
   }
 }

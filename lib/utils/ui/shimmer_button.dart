@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
-/// A button with a rainbow shimmer gradient effect
+/// A button with a simple shimmer effect and thin gray border
 class ShimmerButton extends StatefulWidget {
-  final String label;
-  final IconData icon;
   final VoidCallback onPressed;
-  final bool isCompact;
+  final Widget child;
 
   const ShimmerButton({
     super.key,
-    required this.label,
-    required this.icon,
     required this.onPressed,
-    this.isCompact = false,
+    required this.child,
   });
 
   @override
@@ -29,7 +25,7 @@ class _ShimmerButtonState extends State<ShimmerButton> with SingleTickerProvider
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2),
     )..repeat();
   }
 
@@ -50,39 +46,30 @@ class _ShimmerButtonState extends State<ShimmerButton> with SingleTickerProvider
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              gradient: AppColors.rainbowGradient(_controller.value * 2 * 3.14159),
-              boxShadow: _isHovered ? AppColors.softShadow : null,
-            ),
-            child: ElevatedButton(
-              onPressed: widget.onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: widget.isCompact ? 12.0 : 16.0,
-                  horizontal: widget.isCompact ? 12.0 : 16.0,
-                ),
-                fixedSize: widget.isCompact ? null : const Size.fromWidth(double.maxFinite),
+              border: Border.all(
+                color: Color.lerp(
+                  Colors.grey.shade300,
+                  Colors.grey.shade500,
+                  (_controller.value - 0.5).abs() * 2,
+                )!,
+                width: 1.0,
               ),
-              child: Row(
-                mainAxisSize: widget.isCompact ? MainAxisSize.min : MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(widget.icon, size: widget.isCompact ? 18 : 24),
-                  SizedBox(width: widget.isCompact ? 6 : 12),
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: widget.isCompact ? 14 : 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              color: _isHovered ? AppColors.primary.withOpacity(0.05) : Colors.white,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onPressed,
+                borderRadius: BorderRadius.circular(11),
+                splashColor: AppColors.primary.withOpacity(0.1),
+                highlightColor: AppColors.primary.withOpacity(0.05),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 16.0,
                   ),
-                ],
+                  child: widget.child,
+                ),
               ),
             ),
           ),

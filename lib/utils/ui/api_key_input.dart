@@ -32,17 +32,33 @@ class ApiKeyInput extends StatefulWidget {
 class _ApiKeyInputState extends State<ApiKeyInput> {
   bool _obscureText = true;
   late TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
   
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
+    
+    // Add focus listener to validate on focus change
+    _focusNode.addListener(_onFocusChange);
   }
   
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
+  }
+  
+  void _onFocusChange() {
+    // Validate API key when focus is lost and text is not empty
+    if (!_focusNode.hasFocus && 
+        _controller.text.isNotEmpty && 
+        widget.onValidate != null &&
+        !widget.isValid) {
+      widget.onValidate!();
+    }
   }
   
   @override
@@ -81,99 +97,121 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
               ),
             ],
           ),
-          child: TextField(
-            controller: _controller,
-            obscureText: _obscureText,
-            onChanged: widget.onChanged,
-            decoration: InputDecoration(
-              hintText: widget.hintText ?? 'Enter your API key',
-              errorText: widget.errorText,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: widget.isValid ? Colors.green : AppColors.primaryLight,
-                  width: 1.5,
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              // Let the focus node handle it
+            },
+            child: TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              obscureText: _obscureText,
+              onChanged: widget.onChanged,
+              decoration: InputDecoration(
+                hintText: widget.hintText ?? 'Enter your API key',
+                errorText: widget.errorText,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
                 ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: widget.isValid ? Colors.green : AppColors.primaryLight,
-                  width: 1.5,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: widget.isValid 
-                      ? Colors.green 
-                      : AppColors.primary,
-                  width: 1.5,
-                ),
-              ),
-              suffixIcon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Toggle visibility button
-                  IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
-                    },
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _getInputBorderColor(),
+                    width: 1.5,
                   ),
-                  
-                  // Validation status indicator
-                  if (widget.isLoading)
-                    const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: Padding(
-                        padding: EdgeInsets.all(4.0),
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                        ),
-                      ),
-                    )
-                  else if (widget.isValid)
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                    ).animate().scale(
-                      duration: 300.ms,
-                      curve: Curves.elasticOut,
-                    )
-                  else if (widget.errorText != null)
-                    const Icon(
-                      Icons.error,
-                      color: Colors.red,
-                    )
-                  else if (widget.onValidate != null && _controller.text.isNotEmpty)
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _getInputBorderColor(),
+                    width: 1.5,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: _getInputBorderColor(),
+                    width: 1.5,
+                  ),
+                ),
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Toggle visibility button
                     IconButton(
-                      icon: const Icon(
-                        Icons.refresh,
+                      icon: Icon(
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
                         color: Colors.grey,
                       ),
-                      onPressed: widget.onValidate,
-                      tooltip: 'Validate API Key',
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
                     ),
-                  const SizedBox(width: 8),
-                ],
+                    
+                    // Validation status indicator or button
+                    if (widget.isLoading)
+                      const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Padding(
+                          padding: EdgeInsets.all(4.0),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                          ),
+                        ),
+                      )
+                    else if (widget.isValid)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                      ).animate().scale(
+                        duration: 300.ms,
+                        curve: Curves.elasticOut,
+                      )
+                    else if (widget.errorText != null)
+                      const Icon(
+                        Icons.error,
+                        color: Colors.red,
+                      )
+                    else if (widget.onValidate != null)
+                      // Explicit validation button
+                      ElevatedButton(
+                        onPressed: _controller.text.isEmpty ? null : widget.onValidate,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          minimumSize: const Size(80, 36),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Validate'),
+                      ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ],
     );
+  }
+  
+  Color _getInputBorderColor() {
+    if (widget.isValid) {
+      return Colors.green;
+    } else if (widget.errorText != null) {
+      return Colors.red;
+    } else if (_controller.text.isEmpty) {
+      return Colors.grey.shade300;
+    } else {
+      return AppColors.primaryLight;
+    }
   }
 }

@@ -2,11 +2,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/secure_storage.dart';
 
 class ElevenLabsService {
   static const String _baseUrl = 'https://api.elevenlabs.io/v1';
-  late final String _apiKey;
+  String? _apiKey;
 
   // Voice IDs for different character types
   static const Map<String, String> _voiceProfiles = {
@@ -17,10 +17,11 @@ class ElevenLabsService {
     'narrator': 'XB0fDUnXU5powFXDhCwa'  // default narrator voice
   };
 
-  ElevenLabsService() {
-    _apiKey = dotenv.env['ELEVENLABS_API_KEY'] ?? '';
-    if (_apiKey.isEmpty) {
-      throw Exception('ElevenLabs API key not found. Please add it to your .env file.');
+  /// Initialize the service by fetching the API key from storage
+  Future<void> initialize() async {
+    _apiKey = await SecureStorageManager.getElevenlabsApiKey();
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      throw Exception('ElevenLabs API key not found. Please add it in the settings.');
     }
   }
 
@@ -61,6 +62,11 @@ class ElevenLabsService {
     String? gender,
     String? voiceDescription,
   }) async {
+    // Ensure API key is loaded
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      await initialize();
+    }
+
     final voiceId = getVoiceId(gender, voiceDescription);
 
     final uri = Uri.parse('$_baseUrl/text-to-speech/$voiceId/stream');
@@ -69,7 +75,7 @@ class ElevenLabsService {
       uri,
       headers: {
         'Accept': 'audio/mpeg',
-        'xi-api-key': _apiKey,
+        'xi-api-key': _apiKey!,
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
@@ -95,12 +101,17 @@ class ElevenLabsService {
 
   /// Get available voices from ElevenLabs
   Future<List<Map<String, dynamic>>> getAvailableVoices() async {
+    // Ensure API key is loaded
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      await initialize();
+    }
+
     final uri = Uri.parse('$_baseUrl/voices');
 
     final response = await http.get(
       uri,
       headers: {
-        'xi-api-key': _apiKey,
+        'xi-api-key': _apiKey!,
         'Content-Type': 'application/json',
       },
     );

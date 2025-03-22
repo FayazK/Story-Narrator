@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../services/gemini_api_service.dart';
 import '../services/elevenlabs_api_service.dart';
-import '../utils/api_storage.dart';
-import '../utils/env_config.dart';
+import '../utils/secure_storage.dart';
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/api_key_input.dart';
 import '../utils/ui/settings_card.dart';
-import '../utils/ui/model_selector.dart';
+import '../utils/ui/shimmer_button.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -25,9 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isGeminiApiKeyValid = false;
   bool _isValidatingGeminiKey = false;
   String? _geminiErrorText;
-  List<String> _availableGeminiModels = [];
-  String? _selectedGeminiModel;
-  bool _isLoadingGeminiModels = false;
+  bool _isGeminiKeyConfigured = false;
   
   // ElevenLabs settings
   String _elevenlabsApiKey = '';
@@ -36,6 +33,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _elevenlabsErrorText;
   Map<String, dynamic>? _elevenlabsUserInfo;
   bool _isLoadingElevenlabsInfo = false;
+  bool _isElevenlabsKeyConfigured = false;
+  
+  // Settings change tracking
+  bool _hasChanges = false;
   
   @override
   void initState() {
@@ -43,47 +44,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSavedSettings();
   }
   
-  // Load saved settings from environment variables or storage
+  // Load saved settings from storage
   Future<void> _loadSavedSettings() async {
-    // First try to load API keys from environment variables
-    String? geminiApiKey = EnvConfig.getGeminiApiKey();
-    String? elevenlabsApiKey = EnvConfig.getElevenlabsApiKey();
+    setState(() {
+      _isGeminiKeyConfigured = false;
+      _isElevenlabsKeyConfigured = false;
+    });
+
+    // Check if keys are configured
+    _isGeminiKeyConfigured = await SecureStorageManager.isGeminiKeyConfigured();
+    _isElevenlabsKeyConfigured = await SecureStorageManager.isElevenlabsKeyConfigured();
     
-    // If not found in environment, try from storage
-    if (geminiApiKey == null || geminiApiKey.isEmpty) {
-      geminiApiKey = await ApiKeyStorage.getGeminiApiKey();
-    }
-    
-    if (elevenlabsApiKey == null || elevenlabsApiKey.isEmpty) {
-      elevenlabsApiKey = await ApiKeyStorage.getElevenlabsApiKey();
-    }
+    // Load API keys from secure storage
+    final geminiApiKey = await SecureStorageManager.getGeminiApiKey();
+    final elevenlabsApiKey = await SecureStorageManager.getElevenlabsApiKey();
     
     // Set Gemini API key if available
     if (geminiApiKey?.isNotEmpty == true) {
       setState(() {
         _geminiApiKey = geminiApiKey ?? '';
+        _isGeminiApiKeyValid = true;
       });
-      _validateGeminiApiKey();
     }
     
     // Set ElevenLabs API key if available
     if (elevenlabsApiKey?.isNotEmpty == true) {
       setState(() {
         _elevenlabsApiKey = elevenlabsApiKey ?? '';
+        _isElevenlabsApiKeyValid = true;
       });
-      _validateElevenlabsApiKey();
+      
+      // Load user info if API key is available
+      if (_isElevenlabsKeyConfigured) {
+        _loadElevenlabsUserInfo();
+      }
     }
     
-    // Load selected Gemini model
-    final selectedModel = await ApiKeyStorage.getSelectedGeminiModel();
-    if (selectedModel != null) {
-      setState(() {
-        _selectedGeminiModel = selectedModel;
-      });
-    }
+    setState(() {});
   }
   
-  // Validate Gemini API key and load models
+  // Validate Gemini API key
   Future<void> _validateGeminiApiKey() async {
     if (_geminiApiKey.isEmpty) {
       setState(() {
@@ -104,38 +104,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _isGeminiApiKeyValid = isValid;
       _isValidatingGeminiKey = false;
       _geminiErrorText = isValid ? null : 'Invalid API key';
+      _hasChanges = true;
     });
     
     if (isValid) {
-      await ApiKeyStorage.saveGeminiApiKey(_geminiApiKey);
-      _loadGeminiModels();
+      await SecureStorageManager.saveGeminiApiKey(_geminiApiKey);
+      setState(() {
+        _isGeminiKeyConfigured = true;
+      });
     }
-  }
-  
-  // Load available Gemini models
-  Future<void> _loadGeminiModels() async {
-    if (!_isGeminiApiKeyValid) return;
-    
-    setState(() {
-      _isLoadingGeminiModels = true;
-    });
-    
-    final models = await _geminiApiService.getAvailableModels(_geminiApiKey);
-    
-    setState(() {
-      _availableGeminiModels = models;
-      _isLoadingGeminiModels = false;
-      
-      // Set default model if none selected
-      if (_selectedGeminiModel == null && models.isNotEmpty) {
-        _selectedGeminiModel = models.contains(_geminiApiService.getDefaultModel())
-            ? _geminiApiService.getDefaultModel()
-            : models.first;
-        
-        // Save the selected model
-        ApiKeyStorage.saveSelectedGeminiModel(_selectedGeminiModel!);
-      }
-    });
   }
   
   // Validate ElevenLabs API key and load user info
@@ -159,10 +136,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _isElevenlabsApiKeyValid = isValid;
       _isValidatingElevenlabsKey = false;
       _elevenlabsErrorText = isValid ? null : 'Invalid API key';
+      _hasChanges = true;
     });
     
     if (isValid) {
-      await ApiKeyStorage.saveElevenlabsApiKey(_elevenlabsApiKey);
+      await SecureStorageManager.saveElevenlabsApiKey(_elevenlabsApiKey);
+      setState(() {
+        _isElevenlabsKeyConfigured = true;
+      });
       _loadElevenlabsUserInfo();
     }
   }
@@ -182,17 +163,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _isLoadingElevenlabsInfo = false;
     });
   }
-  
-  // Handle model selection change
-  void _onModelSelected(String? model) {
-    if (model != null) {
-      setState(() {
-        _selectedGeminiModel = model;
-      });
-      
-      // Save the selected model
-      ApiKeyStorage.saveSelectedGeminiModel(model);
+
+  // Save settings and exit
+  Future<void> _saveSettings() async {
+    if (_geminiApiKey.isNotEmpty && !_isGeminiApiKeyValid) {
+      await _validateGeminiApiKey();
     }
+    
+    if (_elevenlabsApiKey.isNotEmpty && !_isElevenlabsApiKeyValid) {
+      await _validateElevenlabsApiKey();
+    }
+    
+    // Return to previous screen
+    Navigator.pop(context);
   }
 
   @override
@@ -227,9 +210,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Configure your Gemini AI model settings',
               icon: Icons.auto_awesome,
               isExpanded: true,
+              trailing: _isGeminiKeyConfigured ? 
+                const Icon(Icons.check_circle, color: Colors.green) : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Status indicator
+                  if (_isGeminiKeyConfigured) ...[
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green, size: 16),
+                          SizedBox(width: 8),
+                          Text(
+                            'API key configured',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  
                   // API Key input
                   ApiKeyInput(
                     label: 'Gemini API Key',
@@ -242,18 +253,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       setState(() {
                         _geminiApiKey = value;
                         _isGeminiApiKeyValid = false;
+                        _hasChanges = true;
+                        
+                        // Clear error when typing
+                        if (_geminiErrorText != null) {
+                          _geminiErrorText = null;
+                        }
                       });
                     },
                     onValidate: _validateGeminiApiKey,
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Model selector
-                  ModelSelector(
-                    selectedModel: _selectedGeminiModel,
-                    availableModels: _availableGeminiModels,
-                    onChanged: _onModelSelected,
-                    isLoading: _isLoadingGeminiModels,
                   ),
                   
                   // Help text about getting an API key
@@ -270,15 +278,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             
+            const SizedBox(height: 16),
+            
             // ElevenLabs API Settings
             SettingsCard(
               title: 'ElevenLabs API',
               subtitle: 'Configure your text-to-speech settings',
               icon: Icons.record_voice_over,
               isExpanded: true,
+              trailing: _isElevenlabsKeyConfigured ? 
+                const Icon(Icons.check_circle, color: Colors.green) : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Status indicator
+                  if (_isElevenlabsKeyConfigured) ...[
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green, size: 16),
+                          SizedBox(width: 8),
+                          Text(
+                            'API key configured',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  
                   // API Key input
                   ApiKeyInput(
                     label: 'ElevenLabs API Key',
@@ -291,6 +329,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       setState(() {
                         _elevenlabsApiKey = value;
                         _isElevenlabsApiKeyValid = false;
+                        _hasChanges = true;
+                        
+                        // Clear error when typing
+                        if (_elevenlabsErrorText != null) {
+                          _elevenlabsErrorText = null;
+                        }
                       });
                     },
                     onValidate: _validateElevenlabsApiKey,
@@ -318,23 +362,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             
             // Save button
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text(
-                'Save Settings',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+            ShimmerButton(
+              onPressed: _saveSettings,
+              child: Center(
+                child: Text(
+                  'Save Settings',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ).animate().fadeIn(
@@ -370,16 +407,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.purple.shade50,
-            Colors.blue.shade50,
-          ],
-        ),
+        color: Colors.white,
         border: Border.all(
-          color: Colors.purple.shade100,
+          color: Colors.grey.shade300,
           width: 1,
         ),
       ),
