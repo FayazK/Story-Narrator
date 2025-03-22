@@ -7,6 +7,7 @@ import '../services/gemini_service.dart';
 import '../prompts/story_generation_prompt.dart';
 import '../database/database_helper.dart';
 import '../models/story.dart';
+import 'story_edit_screen.dart';
 
 class CreateStoryScreen extends StatefulWidget {
   const CreateStoryScreen({super.key});
@@ -138,18 +139,19 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       // Hide loading dialog
       Navigator.of(context).pop();
 
-      // Navigate to story view or save it
-      // TODO: Implement full view functionality
-
-      // For now, just show a success message
+      // Show a success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Story generated and saved successfully!'),
         ),
       );
 
-      // Pop back to previous screen
-      Navigator.of(context).pop();
+      // Navigate to the story edit screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => StoryEditScreen(storyId: storyId),
+        ),
+      );
     } catch (e) {
       // Hide loading dialog
       Navigator.of(context).pop();

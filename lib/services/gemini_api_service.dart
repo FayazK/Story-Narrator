@@ -16,6 +16,9 @@ class GeminiApiService {
       return false;
     }
 
+    // Trim the API key in case there are any leading/trailing spaces
+    final trimmedApiKey = apiKey.trim();
+
     // Maximum number of retry attempts
     const maxRetries = 2;
     int retryCount = 0;
@@ -25,15 +28,15 @@ class GeminiApiService {
         // Initialize the model with the API key to test if it's valid
         final model = GenerativeModel(
           model: 'gemini-2.0-flash', // Use a more stable model for validation
-          apiKey: apiKey,
+          apiKey: trimmedApiKey,
         );
 
         // Simple prompt to test API key validity
-        final content = [Content.text('test')];
+        final content = [Content.text('Hello')];
         
         // Add timeout using the Future API
         await model.generateContent(content)
-          .timeout(const Duration(seconds: 5), onTimeout: () {
+          .timeout(const Duration(seconds: 10), onTimeout: () {
             throw TimeoutException('API request timed out');
           });
         
@@ -44,7 +47,7 @@ class GeminiApiService {
         retryCount++;
         if (retryCount <= maxRetries) {
           // Wait before retrying
-          await Future.delayed(Duration(seconds: 1));
+          await Future.delayed(const Duration(seconds: 1));
         }
       }
     }

@@ -3,8 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/responsive_sidebar.dart';
 import '../utils/ui/content_container.dart';
+import '../database/database_helper.dart';
+import '../models/story.dart';
+import '../components/home/story_list.dart';
 import './settings_screen.dart';
 import './create_story_screen.dart';
+import './story_edit_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +18,56 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  List<Story> _stories = [];
+  bool _isLoadingStories = false;
   int _selectedNavIndex = 0;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadStories();
+  }
+
+  Future<void> _loadStories() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingStories = true;
+      });
+    }
+    
+    try {
+      final stories = await _databaseHelper.getAllStories();
+      
+      if (mounted) {
+        setState(() {
+          _stories = stories;
+          _isLoadingStories = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingStories = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading stories: $e'),
+            backgroundColor: AppColors.accent4,
+          ),
+        );
+      }
+    }
+  }
+
+  void _handleStorySelected(int storyId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoryEditScreen(storyId: storyId),
+      ),
+    ).then((_) => _loadStories()); // Reload stories when returning
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -562,18 +615,144 @@ class _HomeScreenState extends State<HomeScreen> {
   
   // Recent stories grid (shown when the user has created stories)
   Widget _buildRecentStories() {
-    // This is a placeholder for future implementation
-    return Container();
-  }
-  
-  // Placeholder sections for other tabs
-  Widget _buildMyStoriesContent() {
-    return Center(
-      child: Text(
-        'My Stories Content',
-        style: TextStyle(fontSize: 24, color: AppColors.textDark),
+    final recentStories = _stories.take(3).toList(); // Show up to 3 recent stories
+    
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppColors.subtleShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recent Stories',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _selectedNavIndex = 1; // Switch to My Stories tab
+                    });
+                  },
+                  icon: Icon(Icons.view_list, size: 18, color: AppColors.primary),
+                  label: Text('View All', style: TextStyle(color: AppColors.primary)),
+                ),
+              ],
+            ),
+          ),
+          
+          const Divider(),
+          
+          // Recent stories list
+          for (final story in recentStories)
+            ListTile(
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.book, color: AppColors.primary),
+              ),
+              title: Text(
+                story.title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: story.createdAt != null
+                ? Text('Created: ${story.createdAt}')
+                : null,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _handleStorySelected(story.id!),
+            ),
+            
+          // View all button at the bottom
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedNavIndex = 1; // Switch to My Stories tab
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  foregroundColor: AppColors.primary,
+                ),
+                child: const Text('View All Stories'),
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+  
+  // My Stories content section
+  Widget _buildMyStoriesContent() {
+    return ContentContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'My Stories',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreateStoryScreen(),
+                      ),
+                    ).then((_) => _loadStories()); // Reload stories when returning
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Story'),
+                ),
+              ],
+            ),
+          ),
+          
+          // Story list
+          Expanded(
+            child: _isLoadingStories
+                ? const Center(child: CircularProgressIndicator())
+                : StoryList(
+                    stories: _stories,
+                    onStorySelected: _handleStorySelected,
+                  ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms);
   }
   
   Widget _buildCharactersContent() {
@@ -594,6 +773,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
   
-  // Temporarily set to false until the database provides actual stories
-  bool get _hasStories => false;
+  // Check if there are any stories
+  bool get _hasStories => _stories.isNotEmpty;
 }

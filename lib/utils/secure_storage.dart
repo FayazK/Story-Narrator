@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Storage manager for API keys and app settings
@@ -10,22 +11,18 @@ class SecureStorageManager {
   
   // Simple encryption/obfuscation for API keys (not truly secure but better than plaintext)
   static String _encrypt(String text) {
-    final result = StringBuffer();
-    for (int i = 0; i < text.length; i++) {
-      final char = text.codeUnitAt(i);
-      result.write(String.fromCharCode(char + 7)); // Basic Caesar cipher
-    }
-    return result.toString();
+    // Use base64 encoding instead of Caesar cipher to handle special characters better
+    return base64Encode(utf8.encode(text));
   }
   
   // Decrypt the encrypted text
   static String _decrypt(String text) {
-    final result = StringBuffer();
-    for (int i = 0; i < text.length; i++) {
-      final char = text.codeUnitAt(i);
-      result.write(String.fromCharCode(char - 7));
+    try {
+      return utf8.decode(base64Decode(text));
+    } catch (e) {
+      // Fallback for any decoding errors
+      return '';
     }
-    return result.toString();
   }
   
   // Save Gemini API key

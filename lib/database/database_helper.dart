@@ -24,7 +24,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    Directory documentsDirectory = await getApplicationSupportDirectory();
     String dbPath = join(documentsDirectory.path, 'databases', 'story_narrator.db');
     
     // Ensure the directory exists

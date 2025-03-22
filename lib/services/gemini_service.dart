@@ -3,7 +3,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import '../services/story_service.dart';
 import '../models/story.dart';
 import '../models/script.dart';
-import '../utils/api_storage.dart';
+import '../utils/secure_storage.dart';
 import '../database/database_helper.dart';
 
 class GeminiService {
@@ -17,14 +17,16 @@ class GeminiService {
   }) async {
     try {
       // Get API key from storage
-      final apiKey = await ApiKeyStorage.getGeminiApiKey();
+      final apiKey = await SecureStorageManager.getGeminiApiKey();
 
-      // Check if API key is available
       if (apiKey == null || apiKey.isEmpty) {
         throw Exception(
           'Gemini API key not found. Please add your API key in the settings.',
         );
       }
+
+      // Trim API key to remove any leading/trailing spaces
+      final trimmedApiKey = apiKey.trim();
 
       // Get selected model or use default
       String modelName = 'gemini-2.0-flash';
@@ -32,7 +34,7 @@ class GeminiService {
       // Initialize the Gemini API with system instructions
       final model = GenerativeModel(
         model: modelName,
-        apiKey: apiKey,
+        apiKey: trimmedApiKey,
         systemInstruction: Content.system(systemPrompt),
       );
 
