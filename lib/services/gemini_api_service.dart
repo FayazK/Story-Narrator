@@ -9,25 +9,25 @@ class GeminiApiService {
     'gemini-2.0-flash',
     'gemini-2.0-pro'
   ];
-  
+
   // Validate the API key by attempting to initialize a model and make a simple request
   Future<bool> validateApiKey(String apiKey) async {
     if (apiKey.isEmpty) {
       return false;
     }
-    
+
     // Maximum number of retry attempts
     const maxRetries = 2;
     int retryCount = 0;
-    
+
     while (retryCount <= maxRetries) {
       try {
         // Initialize the model with the API key to test if it's valid
         final model = GenerativeModel(
-          model: 'gemini-1.5-flash', // Use a more stable model for validation
+          model: 'gemini-2.0-flash', // Use a more stable model for validation
           apiKey: apiKey,
         );
-        
+
         // Simple prompt to test API key validity
         final content = [Content.text('test')];
         
