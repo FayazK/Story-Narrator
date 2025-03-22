@@ -34,6 +34,7 @@
 ./macos/Flutter/Flutter-Release.xcconfig
 ./macos/Flutter/GeneratedPluginRegistrant.swift
 ./macos/Podfile
+./macos/Podfile.lock
 ./macos/Runner
 ./macos/Runner/AppDelegate.swift
 ./macos/Runner/Assets.xcassets
@@ -62,6 +63,8 @@
 ./macos/Runner.xcodeproj/project.xcworkspace
 ./macos/Runner.xcodeproj/project.xcworkspace/xcshareddata
 ./macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+./macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+./macos/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/configuration
 ./macos/Runner.xcodeproj/xcshareddata
 ./macos/Runner.xcodeproj/xcshareddata/xcschemes
 ./macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
@@ -69,6 +72,8 @@
 ./macos/Runner.xcworkspace/contents.xcworkspacedata
 ./macos/Runner.xcworkspace/xcshareddata
 ./macos/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+./macos/Runner.xcworkspace/xcshareddata/swiftpm
+./macos/Runner.xcworkspace/xcshareddata/swiftpm/configuration
 ./macos/RunnerTests
 ./macos/RunnerTests/RunnerTests.swift
 ./pubspec.lock
@@ -98,4 +103,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-29 directories, 70 files
+33 directories, 71 files

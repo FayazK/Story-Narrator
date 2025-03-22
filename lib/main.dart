@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'database/database_helper.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -54,7 +55,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const StoryListScreen(title: 'Story Narrator'),
+      home: const HomeScreen(),
     );
   }
 }
