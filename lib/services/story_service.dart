@@ -61,6 +61,7 @@ class StoryService {
         gender: character?.gender,
         voiceDescription:
             script.isNarrator ? 'narrator' : character?.voiceDescription,
+        voiceId: character?.voiceId, // Use voice_id if available
       );
 
       // Update the database with the path
@@ -127,5 +128,10 @@ class StoryService {
   /// Get available ElevenLabs voices
   Future<List<Map<String, dynamic>>> getAvailableVoices() async {
     return await _elevenLabsService.getAvailableVoices();
+  }
+  
+  /// Set voice ID for a character
+  Future<int> setCharacterVoiceId(int characterId, String voiceId) async {
+    return await _dbHelper.updateCharacterVoiceId(characterId, voiceId);
   }
 }

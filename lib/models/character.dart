@@ -5,6 +5,7 @@ class Character {
   final String name;
   final String? gender;
   final String? voiceDescription;
+  final String? voiceId;
 
   Character({
     this.id,
@@ -12,6 +13,7 @@ class Character {
     required this.name,
     this.gender,
     this.voiceDescription,
+    this.voiceId,
   });
 
   factory Character.fromMap(Map<String, dynamic> map) {
@@ -21,6 +23,7 @@ class Character {
       name: map['name'],
       gender: map['gender'],
       voiceDescription: map['voice_description'],
+      voiceId: map['voice_id'],
     );
   }
 
@@ -31,6 +34,26 @@ class Character {
       'name': name,
       'gender': gender,
       'voice_description': voiceDescription,
+      'voice_id': voiceId,
     };
+  }
+  
+  /// Create a copy of this Character with some fields replaced
+  Character copyWith({
+    int? id,
+    int? storyId,
+    String? name,
+    String? gender,
+    String? voiceDescription,
+    String? voiceId,
+  }) {
+    return Character(
+      id: id ?? this.id,
+      storyId: storyId ?? this.storyId,
+      name: name ?? this.name,
+      gender: gender ?? this.gender,
+      voiceDescription: voiceDescription ?? this.voiceDescription,
+      voiceId: voiceId ?? this.voiceId,
+    );
   }
 }

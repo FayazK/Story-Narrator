@@ -8,6 +8,7 @@ class Story {
   final String? imagePrompt;
   final String? createdAt;
   final String? updatedAt;
+  final String? aiResponse;
   final List<Character> characters;
   final List<StoryScene> scenes;
 
@@ -17,6 +18,7 @@ class Story {
     this.imagePrompt,
     this.createdAt,
     this.updatedAt,
+    this.aiResponse,
     this.characters = const [],
     this.scenes = const [],
   });
@@ -28,6 +30,7 @@ class Story {
       imagePrompt: map['image_prompt'],
       createdAt: map['created_at'],
       updatedAt: map['updated_at'],
+      aiResponse: map['ai_response'],
     );
   }
 
@@ -38,6 +41,7 @@ class Story {
       'image_prompt': imagePrompt,
       'created_at': createdAt,
       'updated_at': updatedAt,
+      'ai_response': aiResponse,
     };
   }
 
@@ -47,6 +51,7 @@ class Story {
     String? imagePrompt,
     String? createdAt,
     String? updatedAt,
+    String? aiResponse,
     List<Character>? characters,
     List<StoryScene>? scenes,
   }) {
@@ -56,6 +61,7 @@ class Story {
       imagePrompt: imagePrompt ?? this.imagePrompt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      aiResponse: aiResponse ?? this.aiResponse,
       characters: characters ?? this.characters,
       scenes: scenes ?? this.scenes,
     );

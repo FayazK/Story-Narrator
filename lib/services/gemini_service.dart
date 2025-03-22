@@ -4,46 +4,65 @@ import '../services/story_service.dart';
 import '../models/story.dart';
 import '../models/script.dart';
 import '../utils/api_storage.dart';
+import '../database/database_helper.dart';
 
 class GeminiService {
   final StoryService _storyService = StoryService();
-  
-  /// Generate a story using the Gemini API
-  Future<String> generateStory(String systemPrompt, String userMessage) async {
+
+  /// Generate a story using the Gemini API and optionally save it to the database
+  Future<String> generateStory(
+    String systemPrompt,
+    String userMessage, {
+    int? storyId,
+  }) async {
     try {
       // Get API key from storage
       final apiKey = await ApiKeyStorage.getGeminiApiKey();
-      
+
       // Check if API key is available
       if (apiKey == null || apiKey.isEmpty) {
-        throw Exception('Gemini API key not found. Please add your API key in the settings.');
+        throw Exception(
+          'Gemini API key not found. Please add your API key in the settings.',
+        );
       }
-      
+
       // Get selected model or use default
-      String modelName = await ApiKeyStorage.getSelectedGeminiModel() ?? 'gemini-1.5-pro';
-      
+      String modelName = 'gemini-2.0-flash';
+
       // Initialize the Gemini API with system instructions
       final model = GenerativeModel(
         model: modelName,
         apiKey: apiKey,
         systemInstruction: Content.system(systemPrompt),
       );
-      
+
       // Send the user message and get response
       final response = await model.generateContent([Content.text(userMessage)]);
-      
+
       // Extract the story text from the response
       final storyText = response.text;
-      
+
       if (storyText == null || storyText.isEmpty) {
         throw Exception('Generated story is empty');
       }
-      
+
+      // If a storyId is provided, save the AI response to the database
+      if (storyId != null) {
+        final dbHelper = DatabaseHelper();
+        await dbHelper.updateStoryAiResponse(storyId, storyText);
+      }
+
       return storyText;
     } catch (e) {
       print('Error generating story: $e');
       rethrow;
     }
+  }
+
+  /// Update the AI response for an existing story
+  Future<int> updateAiResponse(int storyId, String aiResponse) async {
+    final dbHelper = DatabaseHelper();
+    return await dbHelper.updateStoryAiResponse(storyId, aiResponse);
   }
 
   /// Process XML directly from Gemini and store it in the database
@@ -61,7 +80,10 @@ class GeminiService {
   }
 
   /// Generate voiceovers for specific scripts in a story
-  Future<List<Script>> generateVoiceoversForScripts(Story story, List<Script> scripts) async {
+  Future<List<Script>> generateVoiceoversForScripts(
+    Story story,
+    List<Script> scripts,
+  ) async {
     final StoryService storyService = _storyService;
     final List<Script> processedScripts = [];
 
@@ -74,11 +96,18 @@ class GeminiService {
           } else {
             // Character script - find the associated character
             final character = story.characters.firstWhere(
-                  (c) => c.id == script.characterId,
-              orElse: () => throw Exception('Character not found for script: ${script.id}'),
+              (c) => c.id == script.characterId,
+              orElse:
+                  () =>
+                      throw Exception(
+                        'Character not found for script: ${script.id}',
+                      ),
             );
 
-            await storyService.generateScriptVoiceover(script, character: character);
+            await storyService.generateScriptVoiceover(
+              script,
+              character: character,
+            );
           }
 
           processedScripts.add(script);

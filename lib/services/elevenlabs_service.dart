@@ -61,15 +61,17 @@ class ElevenLabsService {
     required String outputPath,
     String? gender,
     String? voiceDescription,
+    String? voiceId,
   }) async {
     // Ensure API key is loaded
     if (_apiKey == null || _apiKey!.isEmpty) {
       await initialize();
     }
 
-    final voiceId = getVoiceId(gender, voiceDescription);
+    // Use provided voiceId or determine based on description
+    final String finalVoiceId = voiceId ?? getVoiceId(gender, voiceDescription);
 
-    final uri = Uri.parse('$_baseUrl/text-to-speech/$voiceId/stream');
+    final uri = Uri.parse('$_baseUrl/text-to-speech/$finalVoiceId/stream');
 
     final response = await http.post(
       uri,

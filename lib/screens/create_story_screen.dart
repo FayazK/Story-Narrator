@@ -5,6 +5,8 @@ import '../utils/ui/app_colors.dart';
 import '../utils/ui/content_container.dart';
 import '../services/gemini_service.dart';
 import '../prompts/story_generation_prompt.dart';
+import '../database/database_helper.dart';
+import '../models/story.dart';
 
 class CreateStoryScreen extends StatefulWidget {
   const CreateStoryScreen({super.key});
@@ -17,31 +19,63 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   // Form controllers
   final TextEditingController _storyIdeaController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
-  
+
   // Form values - all optional
   String? _selectedGenre;
   String? _selectedEra;
   String? _selectedSetting;
   bool _isHistorical = false;
   String _characterInformation = '';
-  
+
   // Available options for dropdowns
   final List<String> _genres = [
-    'Fantasy', 'Science Fiction', 'Mystery', 'Romance', 
-    'Horror', 'Adventure', 'Historical Fiction', 'Thriller',
-    'Comedy', 'Drama', 'Fairy Tale', 'Fable', 'Dystopian',
-    'Steampunk', 'Western', 'Cyberpunk', 'Paranormal'
+    'Fantasy',
+    'Science Fiction',
+    'Mystery',
+    'Romance',
+    'Horror',
+    'Adventure',
+    'Historical Fiction',
+    'Thriller',
+    'Comedy',
+    'Drama',
+    'Fairy Tale',
+    'Fable',
+    'Dystopian',
+    'Steampunk',
+    'Western',
+    'Cyberpunk',
+    'Paranormal',
   ];
-  
+
   final List<String> _eras = [
-    'Ancient', 'Medieval', 'Renaissance', 'Industrial Revolution',
-    'Victorian', 'Early 20th Century', 'Modern', 'Future', 'Post-Apocalyptic'
+    'Ancient',
+    'Medieval',
+    'Renaissance',
+    'Industrial Revolution',
+    'Victorian',
+    'Early 20th Century',
+    'Modern',
+    'Future',
+    'Post-Apocalyptic',
   ];
-  
+
   final List<String> _settings = [
-    'Urban', 'Rural', 'Wilderness', 'Coastal', 'Mountain', 
-    'Desert', 'Island', 'Space', 'Underwater', 'Underground',
-    'Kingdom', 'Empire', 'Village', 'Academy', 'Mansion'
+    'Urban',
+    'Rural',
+    'Wilderness',
+    'Coastal',
+    'Mountain',
+    'Desert',
+    'Island',
+    'Space',
+    'Underwater',
+    'Underground',
+    'Kingdom',
+    'Empire',
+    'Village',
+    'Academy',
+    'Mansion',
   ];
 
   @override
@@ -50,7 +84,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     _titleController.dispose();
     super.dispose();
   }
-  
+
   /// Generate a story using Gemini API
   Future<void> _generateStory() async {
     // Check if the story idea is empty
@@ -60,92 +94,117 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       );
       return;
     }
-    
+
+    // Check for a story title
+    final String storyTitle =
+        _titleController.text.isNotEmpty
+            ? _titleController.text
+            : 'Untitled Story'; // Default title if none provided
+
     // Show loading indicator
     _showLoadingDialog();
-    
+
     try {
+      // First save the story to the database to get an ID
+      final dbHelper = DatabaseHelper();
+
+      // Create a new Story object with basic info
+      final story = Story(
+        title: storyTitle,
+        // Set current timestamp for created_at
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
+
+      // Insert the story and get its ID
+      final int storyId = await dbHelper.insertStory(story);
+
       // Get the Gemini service instance
       final geminiService = GeminiService();
-      
+
       // Prepare the user message with all inputs
       final String userMessage = _buildUserMessage();
-      
+
       // Get the system prompt
       final String systemPrompt = StoryGenerationPrompt.getSystemPrompt();
-      
-      // Generate the story
-      final story = await geminiService.generateStory(systemPrompt, userMessage);
-      
+
+      // Generate the story with the storyId to save the AI response
+      final generatedStory = await geminiService.generateStory(
+        systemPrompt,
+        userMessage,
+        storyId: storyId,
+      );
+
       // Hide loading dialog
       Navigator.of(context).pop();
-      
+
       // Navigate to story view or save it
-      // TODO: Implement save and view functionality
-      
+      // TODO: Implement full view functionality
+
       // For now, just show a success message
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Story generated successfully!')),
+        const SnackBar(
+          content: Text('Story generated and saved successfully!'),
+        ),
       );
-      
-      // Print the generated story to console for now
-      print('Generated Story:\n$story');
-      
+
+      // Pop back to previous screen
+      Navigator.of(context).pop();
     } catch (e) {
       // Hide loading dialog
       Navigator.of(context).pop();
-      
+
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error generating story: ${e.toString()}')),
       );
     }
   }
-  
+
   /// Build the user message from all form inputs
   String _buildUserMessage() {
     final StringBuffer message = StringBuffer();
-    
+
     // Add the story idea
     message.writeln('Story Idea: ${_storyIdeaController.text.trim()}');
     message.writeln();
-    
+
     // Add title if provided
     if (_titleController.text.isNotEmpty) {
       message.writeln('Title: ${_titleController.text.trim()}');
       message.writeln();
     }
-    
+
     // Add genre if selected
     if (_selectedGenre != null && _selectedGenre!.isNotEmpty) {
       message.writeln('Genre: $_selectedGenre');
     }
-    
+
     // Add era if selected
     if (_selectedEra != null && _selectedEra!.isNotEmpty) {
       message.writeln('Era: $_selectedEra');
     }
-    
+
     // Add setting if selected
     if (_selectedSetting != null && _selectedSetting!.isNotEmpty) {
       message.writeln('Setting: $_selectedSetting');
     }
-    
+
     // Add historical flag if selected
     if (_isHistorical) {
       message.writeln('Include Historical Elements: Yes');
     }
-    
+
     // Add character information if provided
     if (_characterInformation.isNotEmpty) {
       message.writeln();
       message.writeln('Characters:');
       message.writeln(_characterInformation);
     }
-    
+
     return message.toString();
   }
-  
+
   /// Show a loading dialog while generating the story
   void _showLoadingDialog() {
     showDialog(
@@ -155,7 +214,9 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         return Dialog(
           backgroundColor: Colors.white,
           elevation: 8,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -176,9 +237,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 Text(
                   'This may take a moment as our AI crafts your narrative.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.textMedium,
-                  ),
+                  style: TextStyle(color: AppColors.textMedium),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -217,30 +276,22 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-        ),
+        decoration: BoxDecoration(color: AppColors.bgSurface),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Story Idea Input Section - 60% width
-            Expanded(
-              flex: 6,
-              child: _buildStoryIdeaSection(),
-            ),
-            
+            Expanded(flex: 6, child: _buildStoryIdeaSection()),
+
             // Vertical divider
             Container(
               width: 1,
               color: AppColors.divider,
               margin: const EdgeInsets.symmetric(horizontal: 16),
             ),
-            
+
             // Story Configuration Section - 40% width
-            Expanded(
-              flex: 4,
-              child: _buildStoryConfigSection(),
-            ),
+            Expanded(flex: 4, child: _buildStoryConfigSection()),
           ],
         ),
       ),
@@ -267,13 +318,10 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             const SizedBox(height: 8),
             Text(
               'Describe your story idea in as much or as little detail as you want. Our AI will help expand your concept into a full narrative.',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textMedium,
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textMedium),
             ),
             const SizedBox(height: 24),
-            
+
             // Title input
             TextField(
               controller: _titleController,
@@ -288,7 +336,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Story idea text area
             Container(
               decoration: BoxDecoration(
@@ -301,7 +349,8 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 maxLines: 18,
                 style: const TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  hintText: 'Start typing your story idea or concept here...\n\nExample: "A detective with the ability to see memories of the dead investigates a series of mysterious disappearances in a small coastal town."',
+                  hintText:
+                      'Start typing your story idea or concept here...\n\nExample: "A detective with the ability to see memories of the dead investigates a series of mysterious disappearances in a small coastal town."',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -310,16 +359,14 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Story idea suggestions
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.primaryLight.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primaryLight,
-                ),
+                border: Border.all(color: AppColors.primaryLight),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,18 +430,15 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             const SizedBox(height: 8),
             Text(
               'Configure your story settings. All fields are optional.',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textMedium,
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textMedium),
             ),
             const SizedBox(height: 24),
-            
+
             // Form fields
             _buildConfigForm(),
-            
+
             const SizedBox(height: 32),
-            
+
             // Characters section
             _buildCharactersSection(),
           ],
@@ -418,9 +462,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           // Genre dropdown
           const Text(
             'Genre (optional)',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
@@ -429,15 +471,19 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
               hintText: 'Select a genre (optional)',
             ),
-            items: _genres.map((genre) {
-              return DropdownMenuItem<String>(
-                value: genre,
-                child: Text(genre),
-              );
-            }).toList(),
+            items:
+                _genres.map((genre) {
+                  return DropdownMenuItem<String>(
+                    value: genre,
+                    child: Text(genre),
+                  );
+                }).toList(),
             onChanged: (value) {
               setState(() {
                 _selectedGenre = value;
@@ -445,13 +491,11 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Era dropdown
           const Text(
             'Era (optional)',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
@@ -460,15 +504,16 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
               hintText: 'Select an era (optional)',
             ),
-            items: _eras.map((era) {
-              return DropdownMenuItem<String>(
-                value: era,
-                child: Text(era),
-              );
-            }).toList(),
+            items:
+                _eras.map((era) {
+                  return DropdownMenuItem<String>(value: era, child: Text(era));
+                }).toList(),
             onChanged: (value) {
               setState(() {
                 _selectedEra = value;
@@ -476,13 +521,11 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Setting dropdown
           const Text(
             'Setting (optional)',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
@@ -491,15 +534,19 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
               hintText: 'Select a setting (optional)',
             ),
-            items: _settings.map((setting) {
-              return DropdownMenuItem<String>(
-                value: setting,
-                child: Text(setting),
-              );
-            }).toList(),
+            items:
+                _settings.map((setting) {
+                  return DropdownMenuItem<String>(
+                    value: setting,
+                    child: Text(setting),
+                  );
+                }).toList(),
             onChanged: (value) {
               setState(() {
                 _selectedSetting = value;
@@ -507,7 +554,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Historical toggle
           Row(
             children: [
@@ -523,9 +570,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               const SizedBox(width: 8),
               const Text(
                 'Based on Historical Events',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -557,19 +602,17 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           const SizedBox(height: 8),
           Text(
             'Describe your characters and their roles (optional)',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textMedium,
-            ),
+            style: TextStyle(fontSize: 14, color: AppColors.textMedium),
           ),
           const SizedBox(height: 16),
-          
+
           // Character text area
           TextField(
             controller: TextEditingController(),
             maxLines: 6,
             decoration: InputDecoration(
-              hintText: 'Example:\n- Sarah: 28-year-old detective with a mysterious past\n- Marcus: Town sheriff hiding dark secrets\n- Emily: Local librarian who discovers an ancient artifact',
+              hintText:
+                  'Example:\n- Sarah: 28-year-old detective with a mysterious past\n- Marcus: Town sheriff hiding dark secrets\n- Emily: Local librarian who discovers an ancient artifact',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -622,9 +665,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             ),
             child: const Text(
               'Generate Story',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],

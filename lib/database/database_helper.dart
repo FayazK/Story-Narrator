@@ -32,7 +32,7 @@ class DatabaseHelper {
     
     return await openDatabase(
       dbPath,
-      version: 1,
+      version: 2,
       onCreate: _createDatabase,
     );
   }
@@ -45,7 +45,8 @@ class DatabaseHelper {
         title TEXT NOT NULL,
         image_prompt TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ai_response TEXT
       )
     ''');
 
@@ -57,6 +58,7 @@ class DatabaseHelper {
         name TEXT NOT NULL,
         gender TEXT,
         voice_description TEXT,
+        voice_id TEXT,
         FOREIGN KEY (story_id) REFERENCES stories (id) ON DELETE CASCADE
       )
     ''');
@@ -348,5 +350,27 @@ class DatabaseHelper {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String dbPath = join(documentsDirectory.path, 'databases', 'story_narrator.db');
     return File(dbPath).exists();
+  }
+
+  /// Update a story's AI response
+  Future<int> updateStoryAiResponse(int id, String aiResponse) async {
+    final Database db = await database;
+    return await db.update(
+      'stories',
+      {'ai_response': aiResponse},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Update a character's voice ID
+  Future<int> updateCharacterVoiceId(int id, String voiceId) async {
+    final Database db = await database;
+    return await db.update(
+      'characters',
+      {'voice_id': voiceId},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
