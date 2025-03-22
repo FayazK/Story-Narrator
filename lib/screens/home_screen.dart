@@ -4,6 +4,7 @@ import '../utils/ui/app_colors.dart';
 import '../utils/ui/responsive_sidebar.dart';
 import '../utils/ui/content_container.dart';
 import './settings_screen.dart';
+import './create_story_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -53,9 +54,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 });
               },
               onCreateStory: () {
-                // TODO: Navigate to create story screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Create Story button pressed')),
+                // Navigate to create story screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateStoryScreen(),
+                  ),
                 );
               },
               onSettings: () {
@@ -158,7 +162,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.add_circle_outline,
                         label: 'New Story',
                         onTap: () {
-                          // TODO: Navigate to create story screen
+                          // Navigate to create story screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CreateStoryScreen(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(width: 12),
@@ -320,7 +330,13 @@ class _HomeScreenState extends State<HomeScreen> {
           // Action button
           ElevatedButton(
             onPressed: () {
-              // TODO: Open create story dialog/screen
+              // Navigate to create story screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CreateStoryScreen(),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'database/database_helper.dart';
 import 'screens/home_screen.dart';
+import 'screens/create_story_screen.dart';
 import 'utils/ui/theme_provider.dart';
 
 void main() async {
@@ -142,7 +143,12 @@ class _StoryListScreenState extends State<StoryListScreen> {
                 ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to create story screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreateStoryScreen(),
+            ),
+          );
         },
         tooltip: 'Create Story',
         child: const Icon(Icons.add),
