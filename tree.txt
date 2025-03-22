@@ -4,6 +4,8 @@
 ./assets
 ./lib
 ./lib/components
+./lib/components/home
+./lib/components/home/story_list.dart
 ./lib/components/settings
 ./lib/components/settings/about_content.dart
 ./lib/components/settings/api_config_content.dart
@@ -11,6 +13,13 @@
 ./lib/components/settings/placeholder_content.dart
 ./lib/components/settings/settings_section_card.dart
 ./lib/components/settings/settings_sidebar.dart
+./lib/components/story_edit
+./lib/components/story_edit/character_list_card.dart
+./lib/components/story_edit/index.dart
+./lib/components/story_edit/scene_details.dart
+./lib/components/story_edit/scenes_sidebar.dart
+./lib/components/story_edit/script_item.dart
+./lib/components/story_edit/story_details_card.dart
 ./lib/database
 ./lib/database/database_helper.dart
 ./lib/main.dart
@@ -25,6 +34,7 @@
 ./lib/screens/create_story_screen.dart
 ./lib/screens/home_screen.dart
 ./lib/screens/settings_screen.dart
+./lib/screens/story_edit_screen.dart
 ./lib/services
 ./lib/services/elevenlabs_api_service.dart
 ./lib/services/elevenlabs_service.dart
@@ -131,4 +141,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-39 directories, 93 files
+41 directories, 101 files
