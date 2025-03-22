@@ -12,13 +12,53 @@ class StoryService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final ElevenLabsService _elevenLabsService = ElevenLabsService();
 
+  /// Extract XML content from text
+  String _extractXml(String text) {
+    // Look for <story> opening and </story> closing tags
+    final RegExp storyRegex = RegExp(r'<story>.*?</story>', dotAll: true);
+    final match = storyRegex.firstMatch(text);
+    
+    if (match != null) {
+      // Return just the XML content
+      return match.group(0) ?? '';
+    }
+    
+    // Try another approach if we didn't find valid XML
+    // Sometimes AI adds backticks or other formatting
+    final RegExp xmlWithBackticksRegex = RegExp(r'```xml\s*(<story>.*?</story>)\s*```', dotAll: true);
+    final backtickMatch = xmlWithBackticksRegex.firstMatch(text);
+    
+    if (backtickMatch != null && backtickMatch.groupCount >= 1) {
+      return backtickMatch.group(1) ?? '';
+    }
+    
+    // If still no match, try a more general approach
+    final RegExp anyXmlRegex = RegExp(r'<story>\s*<story_details>.*?</story>', dotAll: true);
+    final anyMatch = anyXmlRegex.firstMatch(text);
+    
+    if (anyMatch != null) {
+      return anyMatch.group(0) ?? '';
+    }
+    
+    // If no match found, return the original text
+    return text;
+  }
+
   /// Import a story from XML string
   Future<int> importStoryFromXml(String xmlString) async {
-    // Parse XML to Story object
-    final story = StoryXmlParser.parseStoryXml(xmlString);
-
-    // Save to database
-    return await _dbHelper.insertCompleteStory(story);
+    try {
+      // Extract just the XML content in case there's extra text
+      final purifiedXml = _extractXml(xmlString);
+      
+      // Parse XML to Story object
+      final story = StoryXmlParser.parseStoryXml(purifiedXml);
+  
+      // Save to database
+      return await _dbHelper.insertCompleteStory(story);
+    } catch (e) {
+      print('Error importing story from XML: $e');
+      rethrow;
+    }
   }
 
   /// Import a story from Gemini-generated XML string

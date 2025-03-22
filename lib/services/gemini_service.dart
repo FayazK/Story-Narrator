@@ -9,6 +9,30 @@ import '../database/database_helper.dart';
 class GeminiService {
   final StoryService _storyService = StoryService();
 
+  /// Clean the AI response to extract only the XML part
+  String _cleanAiResponse(String aiResponse) {
+    // Try to extract the XML part from the AI response
+    final RegExp storyRegex = RegExp(r'<story>.*?</story>', dotAll: true);
+    final match = storyRegex.firstMatch(aiResponse);
+    
+    if (match != null) {
+      // Return just the XML content
+      return match.group(0) ?? '';
+    }
+    
+    // Try another approach if we didn't find valid XML
+    // Sometimes AI adds backticks or other formatting
+    final RegExp xmlWithBackticksRegex = RegExp(r'```xml\s*(<story>.*?</story>)\s*```', dotAll: true);
+    final backtickMatch = xmlWithBackticksRegex.firstMatch(aiResponse);
+    
+    if (backtickMatch != null && backtickMatch.groupCount >= 1) {
+      return backtickMatch.group(1) ?? '';
+    }
+    
+    // If we can't find an exact XML tag, just return the original response
+    return aiResponse;
+  }
+
   /// Generate a story using the Gemini API and optionally save it to the database
   Future<String> generateStory(
     String systemPrompt,
@@ -48,13 +72,17 @@ class GeminiService {
         throw Exception('Generated story is empty');
       }
 
+      // Extract just the XML part from the response
+      final String cleanedResponse = _cleanAiResponse(storyText);
+
       // If a storyId is provided, save the AI response to the database
       if (storyId != null) {
         final dbHelper = DatabaseHelper();
-        await dbHelper.updateStoryAiResponse(storyId, storyText);
+        // Save the cleaned XML response
+        await dbHelper.updateStoryAiResponse(storyId, cleanedResponse);
       }
 
-      return storyText;
+      return cleanedResponse;
     } catch (e) {
       print('Error generating story: $e');
       rethrow;
@@ -70,8 +98,11 @@ class GeminiService {
   /// Process XML directly from Gemini and store it in the database
   Future<Story?> processGeminiStoryXml(String xmlString) async {
     try {
+      // Extract just the XML part
+      final cleanedXml = _cleanAiResponse(xmlString);
+      
       // Import the story XML
-      final storyId = await _storyService.importStoryFromXml(xmlString);
+      final storyId = await _storyService.importStoryFromXml(cleanedXml);
 
       // Retrieve the full story object with all related data
       return await _storyService.getStoryById(storyId);
