@@ -4,14 +4,16 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'database/database_helper.dart';
 import 'screens/home_screen.dart';
+import 'utils/ui/theme_provider.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Load environment variables if using .env file
+  // Load environment variables from .env file
   try {
-    await dotenv.load();
+    await dotenv.load(fileName: 'assets/.env');
+    print('Environment variables loaded successfully');
   } catch (e) {
     print('No .env file found or error loading it: $e');
   }
@@ -51,10 +53,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Story Narrator',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.getTheme(),
       home: const HomeScreen(),
     );
   }

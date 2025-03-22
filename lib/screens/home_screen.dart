@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/responsive_sidebar.dart';
 import '../utils/ui/content_container.dart';
+import './settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,9 +50,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
               onSettings: () {
-                // TODO: Navigate to settings screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings button pressed')),
+                // Navigate to settings screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
                 );
               },
             ),

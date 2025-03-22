@@ -1,6 +1,7 @@
 .
 ./README.md
 ./analysis_options.yaml
+./assets
 ./lib
 ./lib/database
 ./lib/database/database_helper.dart
@@ -10,11 +11,28 @@
 ./lib/models/script.dart
 ./lib/models/story.dart
 ./lib/models/story_scene.dart
+./lib/screens
+./lib/screens/home_screen.dart
+./lib/screens/settings_screen.dart
 ./lib/services
+./lib/services/elevenlabs_api_service.dart
 ./lib/services/elevenlabs_service.dart
+./lib/services/gemini_api_service.dart
 ./lib/services/gemini_service.dart
 ./lib/services/story_service.dart
 ./lib/utils
+./lib/utils/api_storage.dart
+./lib/utils/env_config.dart
+./lib/utils/secure_storage.dart
+./lib/utils/ui
+./lib/utils/ui/api_key_input.dart
+./lib/utils/ui/app_colors.dart
+./lib/utils/ui/content_container.dart
+./lib/utils/ui/model_selector.dart
+./lib/utils/ui/responsive_sidebar.dart
+./lib/utils/ui/settings_card.dart
+./lib/utils/ui/shimmer_button.dart
+./lib/utils/ui/theme_provider.dart
 ./lib/utils/xml_parser.dart
 ./linux
 ./linux/CMakeLists.txt
@@ -103,4 +121,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-33 directories, 71 files
+36 directories, 86 files

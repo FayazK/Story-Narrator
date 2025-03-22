@@ -1,3 +1,6 @@
+# API keys
+.env
+assets/.env
 # Miscellaneous
 *.class
 *.log
