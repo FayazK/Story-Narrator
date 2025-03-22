@@ -13,27 +13,54 @@ class AppColors {
   static const Color textLight = Color(0xFFFFFFFF);    // white
   
   // Background colors
-  static const Color bgLight = Color(0xFFF5F5F5);      // grey 100
+  static const Color bgLight = Color(0xFFF9F9F9);      // very light grey
   static const Color bgWhite = Color(0xFFFFFFFF);      // white
+  static const Color bgSurface = Color(0xFFF2F2F2);    // surface background
+  static const Color bgCard = Color(0xFFFFFFFF);       // card background
+  
+  // UI element colors
+  static const Color border = Color(0xFFE0E0E0);       // border color
+  static const Color divider = Color(0xFFEEEEEE);      // divider color
+  static const Color hover = Color(0xFFF0F0F0);        // hover state color
+  
+  // Accent colors
+  static const Color accent1 = Color(0xFF2196F3);      // blue
+  static const Color accent2 = Color(0xFF4CAF50);      // green for success
+  static const Color accent3 = Color(0xFFFFC107);      // amber for warnings
+  static const Color accent4 = Color(0xFFF44336);      // red for errors
+  
+  // Desktop-specific UI colors
+  static const Color sidebarBg = Color(0xFF2C2C2C);    // dark sidebar
+  static const Color sidebarText = Color(0xFFE0E0E0);  // sidebar text
+  static const Color sidebarHover = Color(0xFF3D3D3D); // sidebar hover
+  static const Color sidebarSelected = Color(0xFF673AB7); // selected item
   
   // Gradient definitions
   static LinearGradient get sidebarGradient => LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      primaryDark,
-      primary.withOpacity(0.9),
-      const Color(0xFF512DA8),  // deep purple 700
+      const Color(0xFF212121), // darker color
+      const Color(0xFF303030), // slightly lighter
     ],
   );
   
   static LinearGradient get backgroundGradient => LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
     colors: [
       bgLight,
       bgWhite,
       bgLight.withOpacity(0.7),
+    ],
+  );
+  
+  static LinearGradient get headerGradient => LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      primaryDark,
+      primary,
     ],
   );
   
@@ -69,9 +96,32 @@ class AppColors {
   // Shadow for elevation effect
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.15),
-      blurRadius: 10,
+      color: Colors.black.withOpacity(0.08),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ];
+  
+  // Deeper shadow for elevated cards
+  static List<BoxShadow> get cardShadow => [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.10),
+      blurRadius: 12,
       offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 4,
+      offset: const Offset(0, 1),
+    ),
+  ];
+  
+  // Slight shadow for subtle elevation
+  static List<BoxShadow> get subtleShadow => [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.04),
+      blurRadius: 3,
+      offset: const Offset(0, 1),
     ),
   ];
 }

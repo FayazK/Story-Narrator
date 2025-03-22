@@ -3,6 +3,14 @@
 ./analysis_options.yaml
 ./assets
 ./lib
+./lib/components
+./lib/components/settings
+./lib/components/settings/about_content.dart
+./lib/components/settings/api_config_content.dart
+./lib/components/settings/index.dart
+./lib/components/settings/placeholder_content.dart
+./lib/components/settings/settings_section_card.dart
+./lib/components/settings/settings_sidebar.dart
 ./lib/database
 ./lib/database/database_helper.dart
 ./lib/main.dart
@@ -22,7 +30,6 @@
 ./lib/services/story_service.dart
 ./lib/utils
 ./lib/utils/api_storage.dart
-./lib/utils/env_config.dart
 ./lib/utils/secure_storage.dart
 ./lib/utils/ui
 ./lib/utils/ui/api_key_input.dart
@@ -121,4 +128,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-36 directories, 86 files
+38 directories, 91 files
