@@ -3,6 +3,7 @@ import '../../services/gemini_service.dart';
 import '../../database/database_helper.dart';
 import '../../models/story.dart';
 import '../../prompts/story_generation_prompt.dart';
+import '../../utils/secure_storage.dart';
 
 class StoryGeneratorHelper {
   /// Build the user message from all form inputs
@@ -57,6 +58,12 @@ class StoryGeneratorHelper {
     return message.toString();
   }
 
+  /// Check if the Gemini API key is configured
+  static Future<bool> isGeminiApiConfigured() async {
+    final apiKey = await SecureStorageManager.getGeminiApiKey();
+    return apiKey != null && apiKey.trim().isNotEmpty;
+  }
+
   /// Generate a story using Gemini API
   static Future<int> generateStory({
     required String storyIdea,
@@ -66,8 +73,17 @@ class StoryGeneratorHelper {
     String? setting,
     bool isHistorical = false,
     String? characterInformation,
+    bool isCancelled = false, // Flag to check if generation was cancelled
+    Function(double)? onProgress, // Callback to report progress
   }) async {
     try {
+      // Validate API key configuration
+      if (!await isGeminiApiConfigured()) {
+        throw Exception(
+          'Gemini API key not configured. Please add your API key in the settings.',
+        );
+      }
+
       // First save the story to the database to get an ID
       final dbHelper = DatabaseHelper();
 
@@ -80,6 +96,16 @@ class StoryGeneratorHelper {
 
       // Insert the story and get its ID
       final int storyId = await dbHelper.insertStory(story);
+
+      // Report initial progress
+      onProgress?.call(0.1);
+
+      // Check if generation was cancelled
+      if (isCancelled) {
+        // Clean up the partial story
+        await dbHelper.deleteStory(storyId);
+        throw Exception('Story generation was cancelled');
+      }
 
       // Get the Gemini service instance
       final geminiService = GeminiService();
@@ -98,6 +124,9 @@ class StoryGeneratorHelper {
       // Get the system prompt
       final String systemPrompt = StoryGenerationPrompt.getSystemPrompt();
 
+      // Report progress before API call
+      onProgress?.call(0.3);
+
       // Generate the story with the storyId to save the AI response
       await geminiService.generateStory(
         systemPrompt,
@@ -105,10 +134,35 @@ class StoryGeneratorHelper {
         storyId: storyId,
       );
 
+      // Check if generation was cancelled after API call
+      if (isCancelled) {
+        // Clean up the partial story
+        await dbHelper.deleteStory(storyId);
+        throw Exception('Story generation was cancelled');
+      }
+
+      // Report completion
+      onProgress?.call(1.0);
+
       return storyId;
     } catch (e) {
       debugPrint('Error generating story: $e');
-      throw Exception('Failed to generate story: $e');
+      
+      // If the error isn't a cancellation, it's an actual error
+      if (e.toString() != 'Exception: Story generation was cancelled') {
+        throw Exception('Failed to generate story: $e');
+      }
+      rethrow; // Rethrow cancellation exceptions
+    }
+  }
+
+  /// Cleanup method to remove a partially generated story from the database
+  static Future<void> cleanupPartialStory(int storyId) async {
+    try {
+      final dbHelper = DatabaseHelper();
+      await dbHelper.deleteStory(storyId);
+    } catch (e) {
+      debugPrint('Error cleaning up partial story: $e');
     }
   }
 }

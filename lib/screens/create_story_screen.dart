@@ -6,6 +6,7 @@ import '../components/story_create/story_idea_section.dart';
 import '../components/story_create/story_config_section.dart';
 import '../components/story_create/bottom_action_bar.dart';
 import '../components/story_create/loading_dialog.dart';
+import '../utils/secure_storage.dart';
 
 class CreateStoryScreen extends StatefulWidget {
   const CreateStoryScreen({super.key});
@@ -26,12 +27,38 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   bool _isHistorical = false;
   String _characterInformation = '';
   bool _isGenerating = false;
+  bool _isApiConfigured = false;
+  int? _generatedStoryId;
+  double _generationProgress = 0.0;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkApiConfiguration();
+  }
+  
   @override
   void dispose() {
     _storyIdeaController.dispose();
     _titleController.dispose();
+    // If there's a partially generated story that wasn't completed, clean it up
+    _cleanupPartialStory();
     super.dispose();
+  }
+  
+  /// Check if the Gemini API is configured
+  Future<void> _checkApiConfiguration() async {
+    final isConfigured = await StoryGeneratorHelper.isGeminiApiConfigured();
+    setState(() {
+      _isApiConfigured = isConfigured;
+    });
+  }
+  
+  /// Clean up any partially generated story if needed
+  Future<void> _cleanupPartialStory() async {
+    if (_generatedStoryId != null && _isGenerating) {
+      await StoryGeneratorHelper.cleanupPartialStory(_generatedStoryId!);
+    }
   }
 
   /// Show help dialog with information about the story creation process
@@ -109,14 +136,61 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       _isGenerating = false;
     });
     Navigator.of(context).pop(); // Close loading dialog
+    
+    // Clean up the partial story if one was created
+    if (_generatedStoryId != null) {
+      StoryGeneratorHelper.cleanupPartialStory(_generatedStoryId!);
+      _generatedStoryId = null;
+    }
+    
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Story generation cancelled')),
+    );
+  }
+  
+  /// Update generation progress
+  void _updateProgress(double progress) {
+    setState(() {
+      _generationProgress = progress;
+    });
+  }
+
+  /// Check if API is configured, show a message if not
+  void _showApiConfigurationMessage() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'API Key Required',
+            style: TextStyle(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'You need to configure your Gemini API key in the settings before generating stories.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 
   /// Generate a story using StoryGeneratorHelper
   Future<void> _generateStory() async {
     if (_isGenerating) return;
+    
+    // Check if API is configured
+    if (!_isApiConfigured) {
+      _showApiConfigurationMessage();
+      return;
+    }
 
     // Check if the story idea is empty
     if (_storyIdeaController.text.isEmpty) {
@@ -128,16 +202,19 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
 
     setState(() {
       _isGenerating = true;
+      _generationProgress = 0.0;
+      _generatedStoryId = null;
     });
 
-    // Show loading indicator
+    // Show loading indicator with progress
     LoadingDialog.show(
       context,
       onCancel: _cancelGeneration,
+      progress: _generationProgress,
     );
 
     try {
-      // Generate the story
+      // Generate the story with progress tracking
       final int storyId = await StoryGeneratorHelper.generateStory(
         storyIdea: _storyIdeaController.text,
         title: _titleController.text,
@@ -146,15 +223,35 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         setting: _selectedSetting,
         isHistorical: _isHistorical,
         characterInformation: _characterInformation,
+        isCancelled: !_isGenerating, // Pass cancellation state
+        onProgress: (progress) {
+          // Update progress in the UI
+          if (mounted) {
+            setState(() {
+              _generationProgress = progress;
+            });
+            
+            // Update the dialog's progress
+            if (Navigator.of(context).canPop()) {
+              LoadingDialog.updateProgress(context, progress);
+            }
+          }
+        },
       );
+
+      // Save the generated story ID for potential cleanup
+      _generatedStoryId = storyId;
 
       if (!mounted || !_isGenerating) return;
 
       // Hide loading dialog
-      Navigator.of(context).pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
 
       setState(() {
         _isGenerating = false;
+        _generationProgress = 1.0;
       });
 
       // Show success message
@@ -169,19 +266,24 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
         ),
       );
     } catch (e) {
-      if (!mounted || !_isGenerating) return;
+      if (!mounted) return;
 
-      // Hide loading dialog
-      Navigator.of(context).pop();
+      // Hide loading dialog if still showing
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
 
       setState(() {
         _isGenerating = false;
       });
 
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating story: ${e.toString()}')),
-      );
+      // Only show error if not a cancellation exception
+      if (e.toString() != 'Exception: Story generation was cancelled') {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error generating story: ${e.toString()}')),
+        );
+      }
     }
   }
 

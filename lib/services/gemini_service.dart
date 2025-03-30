@@ -5,32 +5,15 @@ import '../models/story.dart';
 import '../models/script.dart';
 import '../utils/secure_storage.dart';
 import '../database/database_helper.dart';
+import '../utils/helpers/xml_parser_util.dart';
 
 class GeminiService {
   final StoryService _storyService = StoryService();
 
   /// Clean the AI response to extract only the XML part
   String _cleanAiResponse(String aiResponse) {
-    // Try to extract the XML part from the AI response
-    final RegExp storyRegex = RegExp(r'<story>.*?</story>', dotAll: true);
-    final match = storyRegex.firstMatch(aiResponse);
-    
-    if (match != null) {
-      // Return just the XML content
-      return match.group(0) ?? '';
-    }
-    
-    // Try another approach if we didn't find valid XML
-    // Sometimes AI adds backticks or other formatting
-    final RegExp xmlWithBackticksRegex = RegExp(r'```xml\s*(<story>.*?</story>)\s*```', dotAll: true);
-    final backtickMatch = xmlWithBackticksRegex.firstMatch(aiResponse);
-    
-    if (backtickMatch != null && backtickMatch.groupCount >= 1) {
-      return backtickMatch.group(1) ?? '';
-    }
-    
-    // If we can't find an exact XML tag, just return the original response
-    return aiResponse;
+    // Import the standardized XML parser
+    return XmlParserUtil.extractXmlFromText(aiResponse);
   }
 
   /// Generate a story using the Gemini API and optionally save it to the database

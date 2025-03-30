@@ -4,32 +4,50 @@ import '../../utils/ui/app_colors.dart';
 
 class LoadingDialog extends StatefulWidget {
   final VoidCallback? onCancel;
+  final double progress;
 
   const LoadingDialog({
     super.key,
     this.onCancel,
+    this.progress = 0.0,
   });
 
-  static void show(BuildContext context, {VoidCallback? onCancel}) {
+  static void show(BuildContext context, {VoidCallback? onCancel, double progress = 0.0}) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => LoadingDialog(onCancel: onCancel),
+      builder: (BuildContext context) => LoadingDialog(onCancel: onCancel, progress: progress),
     );
+  }
+  
+  /// Update the progress of an already shown dialog
+  static void updateProgress(BuildContext context, double progress) {
+    // Find the loading dialog state in the widget tree
+    final LoadingDialogState? state = context.findAncestorStateOfType<LoadingDialogState>();
+    if (state != null) {
+      state.updateProgress(progress);
+    }
   }
 
   @override
-  State<LoadingDialog> createState() => _LoadingDialogState();
+  State<LoadingDialog> createState() => LoadingDialogState();
 }
 
-class _LoadingDialogState extends State<LoadingDialog> {
+class LoadingDialogState extends State<LoadingDialog> {
   int _currentTipIndex = 0;
   late final List<String> _writingTips;
-  double _progress = 0.0;
+  late double _progress;
 
   @override
   void initState() {
     super.initState();
+    _progress = widget.progress;
+    _initializeTips();
+    _startTipRotation();
+  }
+
+  /// Initialize the writing tips
+  void _initializeTips() {
     _writingTips = [
       "Creating your character profiles...",
       "Crafting the perfect story structure...",
@@ -40,47 +58,43 @@ class _LoadingDialogState extends State<LoadingDialog> {
       "Weaving subplots together...",
       "Finalizing character arcs...",
     ];
-
-    // Simulate progress and rotate tips
-    _startProgressSimulation();
+  }
+  
+  /// Update progress from parent
+  void updateProgress(double progress) {
+    if (mounted) {
+      setState(() {
+        _progress = progress;
+      });
+    }
   }
 
-  void _startProgressSimulation() {
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        setState(() {
-          _progress += 0.004; // Increment progress
-          if (_progress >= 1.0) {
-            _progress = 0.0;
-          }
-        });
-        _startProgressSimulation();
-      }
-    });
-
-    // Rotate tips every 3 seconds
+  /// Start rotating tips every few seconds
+  void _startTipRotation() {
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _currentTipIndex = (_currentTipIndex + 1) % _writingTips.length;
         });
-        _startProgressSimulation();
+        _startTipRotation(); // Continue rotation
       }
     });
   }
 
   String _getEstimatedTime() {
-    // Simple estimation based on progress
+    // Estimate time based on actual progress
     final remainingProgress = 1.0 - _progress;
-    final estimatedSeconds = (remainingProgress * 60).round(); // Assume 60 seconds total
-    if (estimatedSeconds > 45) {
-      return "About a minute";
-    } else if (estimatedSeconds > 30) {
-      return "About 45 seconds";
-    } else if (estimatedSeconds > 15) {
-      return "About 30 seconds";
-    } else {
+    
+    if (_progress < 0.1) {
+      return "Starting up...";
+    } else if (_progress < 0.3) {
+      return "About a minute remaining";
+    } else if (_progress < 0.6) {
+      return "About 30 seconds remaining";
+    } else if (_progress < 0.9) {
       return "Almost done...";
+    } else {
+      return "Finalizing your story...";
     }
   }
 
@@ -107,7 +121,7 @@ class _LoadingDialogState extends State<LoadingDialog> {
                   width: 80,
                   height: 80,
                   child: CircularProgressIndicator(
-                    value: _progress,
+                    value: _progress, // Use actual progress value from parent
                     backgroundColor: AppColors.primary.withOpacity(0.2),
                     color: AppColors.primary,
                     strokeWidth: 8,

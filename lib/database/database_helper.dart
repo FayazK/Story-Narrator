@@ -84,6 +84,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         scene_id INTEGER NOT NULL,
         character_id INTEGER, -- NULL for narrator scripts
+        character_name TEXT, -- Used for character mapping during import
         script_text TEXT NOT NULL,
         language TEXT NOT NULL DEFAULT 'english',
         urdu_flavor BOOLEAN DEFAULT 0,
@@ -278,9 +279,16 @@ class DatabaseHelper {
 
       // Insert characters
       final List<int> characterIds = [];
+      final Map<String, int> characterNameToIdMap = {};
+      
       for (var character in story.characters) {
-        int characterId = await txn.insert('characters', character.toMap()..['story_id'] = storyId);
+        // Add the story ID to the character
+        final charMap = character.toMap()..['story_id'] = storyId;
+        int characterId = await txn.insert('characters', charMap);
         characterIds.add(characterId);
+        
+        // Add to name-to-id mapping for later character script processing
+        characterNameToIdMap[character.name] = characterId;
       }
 
       // Insert scenes and scripts
@@ -289,21 +297,23 @@ class DatabaseHelper {
 
         // Insert all scripts for this scene
         for (var script in scene.scripts) {
-          // If this is a character script, update the character_id to use the newly generated ID
-          if (script.characterId != null) {
-            // Use the characterIds list to map the original index to the new database ID
-            // Note: In XML import, we temporarily use index as ID
-            int characterIndex = script.characterId!;
-            if (characterIndex >= 0 && characterIndex < characterIds.length) {
-              int characterId = characterIds[characterIndex];
-              await txn.insert('scripts', script.toMap()
-                ..['scene_id'] = sceneId
-                ..['character_id'] = characterId);
+          final scriptMap = script.toMap()..['scene_id'] = sceneId;
+          
+          // If this is a character script, determine the correct character ID
+          if (!script.isNarrator) {
+            // Use characterName to look up the character ID if available
+            if (script.characterName != null && characterNameToIdMap.containsKey(script.characterName)) {
+              scriptMap['character_id'] = characterNameToIdMap[script.characterName];
+            } 
+            // Fall back to the legacy approach using temporary index IDs if necessary
+            else if (script.characterId != null && script.characterId! >= 0 && 
+                     script.characterId! < characterIds.length) {
+              scriptMap['character_id'] = characterIds[script.characterId!];
             }
-          } else {
-            // For narrator scripts, simply use null character_id
-            await txn.insert('scripts', script.toMap()..['scene_id'] = sceneId);
           }
+          
+          // Insert the script
+          await txn.insert('scripts', scriptMap);
         }
       }
     });

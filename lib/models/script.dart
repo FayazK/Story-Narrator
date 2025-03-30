@@ -3,6 +3,7 @@ class Script {
   final int? id;
   final int sceneId;
   final int? characterId; // NULL for narrator scripts
+  final String? characterName; // Used for character lookup during import
   final String scriptText;
   final String language;
   final bool urduFlavor;
@@ -14,6 +15,7 @@ class Script {
     this.id,
     required this.sceneId,
     this.characterId, // Narrator scripts will have characterId = null
+    this.characterName, // Used for mapping during import
     required this.scriptText,
     this.language = 'english',
     this.urduFlavor = false,
@@ -30,6 +32,7 @@ class Script {
       id: map['id'],
       sceneId: map['scene_id'],
       characterId: map['character_id'],
+      characterName: map['character_name'],
       scriptText: map['script_text'],
       language: map['language'],
       urduFlavor: map['urdu_flavor'] == 1,
@@ -44,6 +47,7 @@ class Script {
       'id': id,
       'scene_id': sceneId,
       'character_id': characterId,
+      'character_name': characterName,
       'script_text': scriptText,
       'language': language,
       'urdu_flavor': urduFlavor ? 1 : 0,
@@ -83,6 +87,7 @@ class Script {
     int? id,
     required int sceneId,
     required int characterId,
+    String? characterName,
     required String scriptText,
     String language = 'english',
     bool urduFlavor = false,
@@ -94,6 +99,7 @@ class Script {
       id: id,
       sceneId: sceneId,
       characterId: characterId,
+      characterName: characterName,
       scriptText: scriptText,
       language: language,
       urduFlavor: urduFlavor,
@@ -108,6 +114,8 @@ class Script {
     int? sceneId,
     int? characterId,
     bool clearCharacterId = false,
+    String? characterName,
+    bool clearCharacterName = false,
     String? scriptText,
     String? language,
     bool? urduFlavor,
@@ -121,6 +129,7 @@ class Script {
       id: id ?? this.id,
       sceneId: sceneId ?? this.sceneId,
       characterId: clearCharacterId ? null : (characterId ?? this.characterId),
+      characterName: clearCharacterName ? null : (characterName ?? this.characterName),
       scriptText: scriptText ?? this.scriptText,
       language: language ?? this.language,
       urduFlavor: urduFlavor ?? this.urduFlavor,

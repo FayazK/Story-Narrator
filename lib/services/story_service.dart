@@ -6,6 +6,8 @@ import '../models/story.dart';
 import '../models/script.dart';
 import '../models/character.dart';
 import '../utils/xml_parser.dart';
+import '../utils/helpers/xml_parser_util.dart';
+import '../utils/helpers/character_mapper_util.dart';
 import 'elevenlabs_service.dart';
 
 class StoryService {
@@ -14,34 +16,8 @@ class StoryService {
 
   /// Extract XML content from text
   String _extractXml(String text) {
-    // Look for <story> opening and </story> closing tags
-    final RegExp storyRegex = RegExp(r'<story>.*?</story>', dotAll: true);
-    final match = storyRegex.firstMatch(text);
-    
-    if (match != null) {
-      // Return just the XML content
-      return match.group(0) ?? '';
-    }
-    
-    // Try another approach if we didn't find valid XML
-    // Sometimes AI adds backticks or other formatting
-    final RegExp xmlWithBackticksRegex = RegExp(r'```xml\s*(<story>.*?</story>)\s*```', dotAll: true);
-    final backtickMatch = xmlWithBackticksRegex.firstMatch(text);
-    
-    if (backtickMatch != null && backtickMatch.groupCount >= 1) {
-      return backtickMatch.group(1) ?? '';
-    }
-    
-    // If still no match, try a more general approach
-    final RegExp anyXmlRegex = RegExp(r'<story>\s*<story_details>.*?</story>', dotAll: true);
-    final anyMatch = anyXmlRegex.firstMatch(text);
-    
-    if (anyMatch != null) {
-      return anyMatch.group(0) ?? '';
-    }
-    
-    // If no match found, return the original text
-    return text;
+    // Use the standardized XML parser utility
+    return XmlParserUtil.extractXmlFromText(text);
   }
 
   /// Import a story from XML string
@@ -51,7 +27,10 @@ class StoryService {
       final purifiedXml = _extractXml(xmlString);
       
       // Parse XML to Story object
-      final story = StoryXmlParser.parseStoryXml(purifiedXml);
+      Story story = StoryXmlParser.parseStoryXml(purifiedXml);
+      
+      // Process character mappings to ensure proper relationships
+      story = CharacterMapperUtil.mapCharacterScripts(story);
   
       // Save to database
       return await _dbHelper.insertCompleteStory(story);
