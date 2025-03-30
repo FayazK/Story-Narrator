@@ -33,9 +33,9 @@ Future<void> initDatabase() async {
     final dbHelper = DatabaseHelper();
     await dbHelper.database;
     
-    print('Database initialized successfully');
+    debugPrint('Database initialized successfully');
   } catch (e) {
-    print('Error initializing database: $e');
+    debugPrint('Error initializing database: $e');
   }
 }
 
@@ -94,7 +94,7 @@ class _StoryListScreenState extends State<StoryListScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading stories: $e');
+      debugPrint('Error loading stories: $e');
       setState(() {
         _isLoading = false;
       });

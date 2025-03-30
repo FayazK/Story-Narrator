@@ -1,6 +1,7 @@
 // lib/database/database_helper.dart
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -134,6 +135,7 @@ class DatabaseHelper {
   }
 
   Future<List<Story>> getAllStories() async {
+    debugPrint('Getting all stories');
     final Database db = await database;
     final List<Map<String, dynamic>> maps = await db.query('stories');
     return List.generate(maps.length, (i) {
