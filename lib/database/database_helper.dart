@@ -33,9 +33,27 @@ class DatabaseHelper {
     
     return await openDatabase(
       dbPath,
-      version: 2,
+      version: 3, // Increase version number to trigger migration
       onCreate: _createDatabase,
+      onUpgrade: _upgradeDatabase,
     );
+  }
+  
+  /// Upgrade database when schema changes
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    debugPrint('Upgrading database from version $oldVersion to $newVersion');
+    
+    // Apply migrations based on oldVersion
+    if (oldVersion < 3) {
+      // Migration to version 3: Add character_name column to scripts table
+      try {
+        await db.execute('ALTER TABLE scripts ADD COLUMN character_name TEXT');
+        debugPrint('Added character_name column to scripts table');
+      } catch (e) {
+        debugPrint('Error adding character_name column: $e');
+        // If the column already exists or there's another issue, log it but don't crash
+      }
+    }
   }
 
   Future<void> _createDatabase(Database db, int version) async {

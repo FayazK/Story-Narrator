@@ -12,6 +12,22 @@ class StoryRepairService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final StoryService _storyService = StoryService();
   
+  /// Check if the scripts table has the character_name column
+  Future<bool> _hasCharacterNameColumn() async {
+    try {
+      final db = await _dbHelper.database;
+      
+      // Try to get table info
+      final tableInfo = await db.rawQuery("PRAGMA table_info(scripts)");
+      
+      // Check if character_name column exists
+      return tableInfo.any((column) => column['name'] == 'character_name');
+    } catch (e) {
+      debugPrint('Error checking for character_name column: $e');
+      return false;
+    }
+  }
+  
   /// Repair a story by re-parsing its AI response
   Future<bool> repairStory(int storyId) async {
     try {
@@ -104,6 +120,9 @@ class StoryRepairService {
   Future<void> _insertStoryComponents(Story story) async {
     if (story.id == null) throw Exception('Story ID is required');
     
+    // Check if character_name column exists
+    final hasCharacterNameColumn = await _hasCharacterNameColumn();
+    
     final db = await _dbHelper.database;
     
     await db.transaction((txn) async {
@@ -123,14 +142,20 @@ class StoryRepairService {
         
         // Insert all scripts for this scene
         for (var script in scene.scripts) {
+          // Create script map but remove character_name if the column doesn't exist
           final scriptMap = script.toMap()..['scene_id'] = sceneId;
+          
+          // If character_name column doesn't exist, remove it from the map
+          if (!hasCharacterNameColumn && scriptMap.containsKey('character_name')) {
+            scriptMap.remove('character_name');
+          }
           
           // If this is a character script, determine the correct character ID
           if (!script.isNarrator) {
             // Use characterName to look up the character ID if available
             if (script.characterName != null && characterNameToIdMap.containsKey(script.characterName)) {
               scriptMap['character_id'] = characterNameToIdMap[script.characterName];
-            }
+            } 
             // If no character name match, check by looking up similar names
             else {
               String? matchedName;
@@ -143,7 +168,10 @@ class StoryRepairService {
               
               if (matchedName != null) {
                 scriptMap['character_id'] = characterNameToIdMap[matchedName];
-                scriptMap['character_name'] = matchedName;
+                // Only add character_name if the column exists
+                if (hasCharacterNameColumn) {
+                  scriptMap['character_name'] = matchedName;
+                }
               }
             }
           }
