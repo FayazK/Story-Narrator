@@ -13,6 +13,13 @@
 ./lib/components/settings/placeholder_content.dart
 ./lib/components/settings/settings_section_card.dart
 ./lib/components/settings/settings_sidebar.dart
+./lib/components/story_create
+./lib/components/story_create/bottom_action_bar.dart
+./lib/components/story_create/characters_section.dart
+./lib/components/story_create/loading_dialog.dart
+./lib/components/story_create/prompt_chip.dart
+./lib/components/story_create/story_config_section.dart
+./lib/components/story_create/story_idea_section.dart
 ./lib/components/story_edit
 ./lib/components/story_edit/character_list_card.dart
 ./lib/components/story_edit/index.dart
@@ -43,6 +50,8 @@
 ./lib/services/story_service.dart
 ./lib/utils
 ./lib/utils/api_storage.dart
+./lib/utils/helpers
+./lib/utils/helpers/story_generator_helper.dart
 ./lib/utils/secure_storage.dart
 ./lib/utils/ui
 ./lib/utils/ui/api_key_input.dart
@@ -141,4 +150,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-41 directories, 101 files
+43 directories, 108 files
