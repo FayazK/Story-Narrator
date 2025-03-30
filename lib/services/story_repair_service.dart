@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/story_service.dart';
 import '../database/database_helper.dart';
 import '../models/story.dart';
 import '../utils/helpers/xml_parser_util.dart';
@@ -9,8 +8,7 @@ import '../utils/helpers/character_mapper_util.dart';
 /// Service to repair stories that failed to properly parse during creation
 class StoryRepairService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final StoryService _storyService = StoryService();
-  
+
   /// Check if the scripts table has the character_name column
   Future<bool> _hasCharacterNameColumn() async {
     try {

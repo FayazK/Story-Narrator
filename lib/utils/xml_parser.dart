@@ -184,7 +184,7 @@ class StoryXmlParser {
                   // Add empty narration if none found
                   scripts.add(Script.narrator(
                     sceneId: 0,
-                    scriptText: 'Scene ${sceneNumber}',
+                    scriptText: 'Scene $sceneNumber',
                     scriptOrder: scriptOrder++,
                   ));
                 }
@@ -193,7 +193,7 @@ class StoryXmlParser {
                 // If narration script is not found, create a default one
                 scripts.add(Script.narrator(
                   sceneId: 0,
-                  scriptText: 'Scene ${sceneNumber}',
+                  scriptText: 'Scene $sceneNumber',
                   scriptOrder: scriptOrder++,
                 ));
               }

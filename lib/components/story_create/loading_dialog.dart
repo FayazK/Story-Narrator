@@ -82,9 +82,7 @@ class LoadingDialogState extends State<LoadingDialog> {
   }
 
   String _getEstimatedTime() {
-    // Estimate time based on actual progress
-    final remainingProgress = 1.0 - _progress;
-    
+
     if (_progress < 0.1) {
       return "Starting up...";
     } else if (_progress < 0.3) {

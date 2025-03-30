@@ -11,7 +11,7 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         secondary: AppColors.primaryDark,
-        background: Colors.white,
+        surface: Colors.white,
       ),
       scaffoldBackgroundColor: Colors.white,
       

@@ -35,7 +35,6 @@ class StoryService {
       // Save to database
       return await _dbHelper.insertCompleteStory(story);
     } catch (e) {
-      print('Error importing story from XML: $e');
       rethrow;
     }
   }

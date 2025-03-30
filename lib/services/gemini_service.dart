@@ -67,7 +67,6 @@ class GeminiService {
 
       return cleanedResponse;
     } catch (e) {
-      print('Error generating story: $e');
       rethrow;
     }
   }
@@ -90,7 +89,6 @@ class GeminiService {
       // Retrieve the full story object with all related data
       return await _storyService.getStoryById(storyId);
     } catch (e) {
-      print('Error processing Gemini XML: $e');
       return null;
     }
   }
@@ -132,7 +130,6 @@ class GeminiService {
 
       return processedScripts;
     } catch (e) {
-      print('Error generating voiceovers for scripts: $e');
       return processedScripts; // Return any successfully processed scripts
     }
   }

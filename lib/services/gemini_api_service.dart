@@ -40,10 +40,8 @@ class GeminiApiService {
             throw TimeoutException('API request timed out');
           });
         
-        print('API key validation successful');
         return true; // If we get here, the API key is valid
       } catch (e) {
-        print('API key validation attempt ${retryCount + 1} failed: $e');
         retryCount++;
         if (retryCount <= maxRetries) {
           // Wait before retrying

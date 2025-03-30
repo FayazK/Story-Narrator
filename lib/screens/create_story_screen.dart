@@ -6,7 +6,6 @@ import '../components/story_create/story_idea_section.dart';
 import '../components/story_create/story_config_section.dart';
 import '../components/story_create/bottom_action_bar.dart';
 import '../components/story_create/loading_dialog.dart';
-import '../utils/secure_storage.dart';
 
 class CreateStoryScreen extends StatefulWidget {
   const CreateStoryScreen({super.key});
@@ -146,13 +145,6 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Story generation cancelled')),
     );
-  }
-  
-  /// Update generation progress
-  void _updateProgress(double progress) {
-    setState(() {
-      _generationProgress = progress;
-    });
   }
 
   /// Check if API is configured, show a message if not

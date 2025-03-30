@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
-import 'shimmer_button.dart';
 
 /// A responsive sidebar that adjusts based on screen size, designed for desktop UIs
 class ResponsiveSidebar extends StatefulWidget {
