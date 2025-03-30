@@ -1,4 +1,3 @@
-// lib/services/story_repair_service.dart
 import 'package:flutter/material.dart';
 import '../services/story_service.dart';
 import '../database/database_helper.dart';
@@ -54,9 +53,15 @@ class StoryRepairService {
       // Ensure character mappings are correct
       parsedStory = CharacterMapperUtil.mapCharacterScripts(parsedStory);
       
+      // Extract title and image prompt from the XML if the current ones are empty/default
+      final String newTitle = parsedStory.title.isNotEmpty ? parsedStory.title : story.title;
+      final String? newImagePrompt = parsedStory.imagePrompt?.isNotEmpty == true ? parsedStory.imagePrompt : story.imagePrompt;
+      
       // Copy over the ID and other metadata from the original story
       parsedStory = parsedStory.copyWith(
         id: story.id,
+        title: newTitle,
+        imagePrompt: newImagePrompt,
         createdAt: story.createdAt,
         updatedAt: DateTime.now().toIso8601String(),
         aiResponse: story.aiResponse,
@@ -126,6 +131,18 @@ class StoryRepairService {
     final db = await _dbHelper.database;
     
     await db.transaction((txn) async {
+      // Update the story record with the proper title and image prompt
+      await txn.update(
+        'stories',
+        {
+          'title': story.title,
+          'image_prompt': story.imagePrompt,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [story.id]
+      );
+      
       // Insert characters
       final Map<String, int> characterNameToIdMap = {};
       

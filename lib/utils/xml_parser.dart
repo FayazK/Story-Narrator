@@ -1,5 +1,6 @@
 // lib/utils/xml_parser.dart
 import 'package:xml/xml.dart' as xml;
+import 'package:flutter/foundation.dart';
 import '../models/story.dart';
 import '../models/character.dart';
 import '../models/story_scene.dart';
@@ -20,126 +21,281 @@ class StoryXmlParser {
       final cleanedXml = _cleanXmlString(xmlString);
       
       final document = xml.XmlDocument.parse(cleanedXml);
-      final storyElement = document.findAllElements('story').first;
-      final storyDetailsElement = storyElement.findElements('story_details').first;
+      final storyElements = document.findAllElements('story');
+      
+      if (storyElements.isEmpty) {
+        debugPrint('No <story> element found in the XML');
+        return Story(title: 'Untitled Story'); // Return a default story
+      }
+      
+      final storyElement = storyElements.first;
+      final storyDetailsElements = storyElement.findElements('story_details');
+      
+      if (storyDetailsElements.isEmpty) {
+        debugPrint('No <story_details> element found in the XML');
+        return Story(title: 'Untitled Story'); // Return a default story
+      }
+      
+      final storyDetailsElement = storyDetailsElements.first;
 
       // Parse story details
-      final title = storyDetailsElement.findElements('title').first.innerText;
-      final imagePrompt = storyDetailsElement.findElements('image_prompt').first.innerText;
+      String title = '';
+      String? imagePrompt;
+      
+      try {
+        final titleElement = storyDetailsElement.findElements('title').firstOrNull;
+        if (titleElement != null) {
+          final fullTitle = titleElement.innerText.trim();
+          
+          // Handle dual-language titles (separated by |)
+          if (fullTitle.contains('|')) {
+            // Extract the first part (English title) before the | symbol
+            title = fullTitle.split('|').first.trim();
+          } else {
+            title = fullTitle;
+          }
+        }
+      } catch (e) {
+        title = 'Untitled Story';
+        debugPrint('Error parsing title: $e');
+      }
+      
+      try {
+        final imagePromptElement = storyDetailsElement.findElements('image_prompt').firstOrNull;
+        if (imagePromptElement != null) {
+          imagePrompt = imagePromptElement.innerText.trim();
+        }
+      } catch (e) {
+        debugPrint('Error parsing image prompt: $e');
+      }
 
       // Parse characters
-      final charactersElement = storyDetailsElement.findElements('characters').first;
       final List<Character> characters = [];
+      try {
+        final charactersElements = storyDetailsElement.findElements('characters');
+        if (charactersElements.isNotEmpty) {
+          final charactersElement = charactersElements.first;
+          
+          for (var characterElement in charactersElement.findElements('character')) {
+            try {
+              final nameElements = characterElement.findElements('n').isEmpty 
+                ? characterElement.findElements('name')
+                : characterElement.findElements('n');
+                
+              final name = nameElements.isNotEmpty 
+                ? nameElements.first.innerText.trim()
+                : 'Unknown Character';
+                
+              final genderElements = characterElement.findElements('gender');
+              final gender = genderElements.isNotEmpty 
+                ? genderElements.first.innerText.trim()
+                : 'neutral';
+                
+              final voiceDescElements = characterElement.findElements('voice_description');
+              final voiceDescription = voiceDescElements.isNotEmpty 
+                ? voiceDescElements.first.innerText.trim()
+                : 'neutral voice';
 
-      for (var characterElement in charactersElement.findElements('character')) {
-        final name = characterElement.findElements('name').first.innerText;
-        final gender = characterElement.findElements('gender').first.innerText;
-        final voiceDescription = characterElement.findElements('voice_description').first.innerText;
-
+              characters.add(Character(
+                storyId: 0, // Will be replaced when saved to database
+                name: name,
+                gender: gender,
+                voiceDescription: voiceDescription,
+              ));
+            } catch (e) {
+              debugPrint('Error parsing character: $e');
+              // Add a default character if we can't parse this one
+              characters.add(Character(
+                storyId: 0,
+                name: 'Character ${characters.length + 1}',
+                gender: 'neutral',
+                voiceDescription: 'neutral voice',
+              ));
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error parsing characters section: $e');
+      }
+      
+      // If no characters were found, add a default one
+      if (characters.isEmpty) {
         characters.add(Character(
-          storyId: 0, // Will be replaced when saved to database
-          name: name,
-          gender: gender,
-          voiceDescription: voiceDescription,
+          storyId: 0,
+          name: 'Narrator',
+          gender: 'neutral',
+          voiceDescription: 'narrator voice',
         ));
       }
 
       // Parse scenes
-      final scenesElement = storyElement.findElements('scenes').first;
       final List<StoryScene> scenes = [];
+      try {
+        final scenesElements = storyElement.findElements('scenes');
+        if (scenesElements.isNotEmpty) {
+          final scenesElement = scenesElements.first;
+          
+          for (var sceneElement in scenesElement.findElements('scene')) {
+            try {
+              // Get scene number with fallback to index + 1
+              int sceneNumber = 0;
+              try {
+                final sceneNumberStr = sceneElement.getAttribute('number');
+                sceneNumber = sceneNumberStr != null ? int.parse(sceneNumberStr) : scenes.length + 1;
+              } catch (e) {
+                sceneNumber = scenes.length + 1;
+                debugPrint('Error parsing scene number: $e');
+              }
+              
+              // Handle optional elements with null checks
+              String? backgroundImage;
+              String? characterActions;
+              String? backgroundSound;
+              String? soundEffects;
+              
+              try { backgroundImage = sceneElement.findElements('background_image').firstOrNull?.innerText.trim(); } catch (e) { /* Optional field */ }
+              try { characterActions = sceneElement.findElements('character_actions').firstOrNull?.innerText.trim(); } catch (e) { /* Optional field */ }
+              try { backgroundSound = sceneElement.findElements('background_sound').firstOrNull?.innerText.trim(); } catch (e) { /* Optional field */ }
+              try { soundEffects = sceneElement.findElements('sound_effects').firstOrNull?.innerText.trim(); } catch (e) { /* Optional field */ }
 
-      for (var sceneElement in scenesElement.findElements('scene')) {
-        final sceneNumber = int.parse(sceneElement.getAttribute('number') ?? '0');
-        
-        // Handle optional elements with null checks
-        String? backgroundImage;
-        String? characterActions;
-        String? backgroundSound;
-        String? soundEffects;
-        
-        try { backgroundImage = sceneElement.findElements('background_image').first.innerText; } catch (e) { /* Optional field */ }
-        try { characterActions = sceneElement.findElements('character_actions').first.innerText; } catch (e) { /* Optional field */ }
-        try { backgroundSound = sceneElement.findElements('background_sound').first.innerText; } catch (e) { /* Optional field */ }
-        try { soundEffects = sceneElement.findElements('sound_effects').first.innerText; } catch (e) { /* Optional field */ }
+              final List<Script> scripts = [];
+              int scriptOrder = 0;
 
-        final List<Script> scripts = [];
-        int scriptOrder = 0;
+              // Parse narration script
+              try {
+                final narrationElements = sceneElement.findElements('narration_script');
+                if (narrationElements.isNotEmpty) {
+                  final narrationElement = narrationElements.first;
+                  final narrationText = narrationElement.innerText.trim();
+                  final language = narrationElement.getAttribute('language') ?? 'hindi';
+                  final urduFlavor = narrationElement.getAttribute('urdu_flavor') == 'true';
+                  final voiceAction = narrationElement.getAttribute('voice_action');
 
-        // Parse narration script
-        try {
-          final narrationElement = sceneElement.findElements('narration_script').first;
-          final narrationText = narrationElement.innerText;
-          final language = narrationElement.getAttribute('language') ?? 'english';
-          final urduFlavor = narrationElement.getAttribute('urdu_flavor') == 'true';
-          final voiceAction = narrationElement.getAttribute('voice_action');
+                  // Add narrator script
+                  scripts.add(Script.narrator(
+                    sceneId: 0, // Will be replaced when saved to database
+                    scriptText: narrationText,
+                    language: language,
+                    urduFlavor: urduFlavor,
+                    voiceAction: voiceAction,
+                    scriptOrder: scriptOrder++,
+                  ));
+                } else {
+                  // Add empty narration if none found
+                  scripts.add(Script.narrator(
+                    sceneId: 0,
+                    scriptText: 'Scene ${sceneNumber}',
+                    scriptOrder: scriptOrder++,
+                  ));
+                }
+              } catch (e) {
+                debugPrint('Error parsing narration script: $e');
+                // If narration script is not found, create a default one
+                scripts.add(Script.narrator(
+                  sceneId: 0,
+                  scriptText: 'Scene ${sceneNumber}',
+                  scriptOrder: scriptOrder++,
+                ));
+              }
 
-          // Add narrator script
-          scripts.add(Script.narrator(
-            sceneId: 0, // Will be replaced when saved to database
-            scriptText: narrationText,
-            language: language,
-            urduFlavor: urduFlavor,
-            voiceAction: voiceAction,
-            scriptOrder: scriptOrder++,
-          ));
-        } catch (e) {
-          // If narration script is not found, create an empty one
-          scripts.add(Script.narrator(
-            sceneId: 0,
-            scriptText: 'Scene ${sceneNumber}',
-            scriptOrder: scriptOrder++,
-          ));
-        }
+              // Parse character scripts
+              try {
+                final characterScriptsElements = sceneElement.findElements('character_scripts');
+                if (characterScriptsElements.isNotEmpty) {
+                  final characterScriptsElement = characterScriptsElements.first;
 
-        // Parse character scripts
-        try {
-          final characterScriptsElement = sceneElement.findElements('character_scripts').first;
+                  for (var scriptElement in characterScriptsElement.findElements('character')) {
+                    try {
+                      final characterName = scriptElement.getAttribute('name') ?? '';
+                      final scriptText = scriptElement.innerText.trim();
+                      final scriptLanguage = scriptElement.getAttribute('language') ?? 'hindi';
+                      final scriptUrduFlavor = scriptElement.getAttribute('urdu_flavor') == 'true';
+                      final scriptVoiceAction = scriptElement.getAttribute('voice_action');
 
-          for (var scriptElement in characterScriptsElement.findElements('character')) {
-            final characterName = scriptElement.getAttribute('name') ?? '';
-            final scriptText = scriptElement.innerText;
-            final scriptLanguage = scriptElement.getAttribute('language') ?? 'english';
-            final scriptUrduFlavor = scriptElement.getAttribute('urdu_flavor') == 'true';
-            final scriptVoiceAction = scriptElement.getAttribute('voice_action');
+                      // Find character by name
+                      final characterIndex = characters.indexWhere((c) => c.name == characterName);
+                      if (characterIndex >= 0) {
+                        scripts.add(Script.character(
+                          sceneId: 0, // Will be replaced when saved to database
+                          characterId: -1, // Will be properly set after characters are saved
+                          characterName: characterName, // Save the name for later mapping
+                          scriptText: scriptText,
+                          language: scriptLanguage,
+                          urduFlavor: scriptUrduFlavor,
+                          voiceAction: scriptVoiceAction,
+                          scriptOrder: scriptOrder++,
+                        ));
+                      } else if (characterName.isNotEmpty) {
+                        // Character not found in list, but we have a name - add a new character
+                        final newCharacter = Character(
+                          storyId: 0,
+                          name: characterName,
+                          gender: 'neutral',
+                          voiceDescription: 'neutral voice',
+                        );
+                        characters.add(newCharacter);
+                        
+                        scripts.add(Script.character(
+                          sceneId: 0,
+                          characterId: -1,
+                          characterName: characterName,
+                          scriptText: scriptText,
+                          language: scriptLanguage,
+                          urduFlavor: scriptUrduFlavor,
+                          voiceAction: scriptVoiceAction,
+                          scriptOrder: scriptOrder++,
+                        ));
+                      }
+                    } catch (e) {
+                      debugPrint('Error parsing character script: $e');
+                    }
+                  }
+                }
+              } catch (e) {
+                debugPrint('Error parsing character scripts section: $e');
+              }
 
-            // Find character by name
-            final characterIndex = characters.indexWhere((c) => c.name == characterName);
-            if (characterIndex >= 0) {
-              scripts.add(Script.character(
-                sceneId: 0, // Will be replaced when saved to database
-                characterId: -1, // Will be properly set after characters are saved
-                characterName: characterName, // Save the name for later mapping
-                scriptText: scriptText,
-                language: scriptLanguage,
-                urduFlavor: scriptUrduFlavor,
-                voiceAction: scriptVoiceAction,
-                scriptOrder: scriptOrder++,
+              scenes.add(StoryScene(
+                storyId: 0, // Will be replaced when saved to database
+                sceneNumber: sceneNumber,
+                backgroundImage: backgroundImage,
+                characterActions: characterActions,
+                backgroundSound: backgroundSound,
+                soundEffects: soundEffects,
+                scripts: scripts,
               ));
+            } catch (e) {
+              debugPrint('Error parsing scene: $e');
             }
           }
-        } catch (e) {
-          // Character scripts are optional
         }
-
+      } catch (e) {
+        debugPrint('Error parsing scenes section: $e');
+      }
+      
+      // If no scenes were found, create a default one
+      if (scenes.isEmpty) {
+        final defaultScript = Script.narrator(
+          sceneId: 0,
+          scriptText: 'This is the beginning of your story.',
+          scriptOrder: 0,
+        );
+        
         scenes.add(StoryScene(
-          storyId: 0, // Will be replaced when saved to database
-          sceneNumber: sceneNumber,
-          backgroundImage: backgroundImage,
-          characterActions: characterActions,
-          backgroundSound: backgroundSound,
-          soundEffects: soundEffects,
-          scripts: scripts,
+          storyId: 0,
+          sceneNumber: 1,
+          scripts: [defaultScript],
         ));
       }
 
       return Story(
-        title: title,
+        title: title.isNotEmpty ? title : 'Untitled Story',
         imagePrompt: imagePrompt,
         characters: characters,
         scenes: scenes,
       );
     } catch (e) {
-      print('Error parsing XML: $e');
+      debugPrint('Error parsing XML: $e');
       throw Exception('Failed to parse story XML: $e');
     }
   }
