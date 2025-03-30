@@ -47,11 +47,14 @@
 ./lib/services/elevenlabs_service.dart
 ./lib/services/gemini_api_service.dart
 ./lib/services/gemini_service.dart
+./lib/services/story_repair_service.dart
 ./lib/services/story_service.dart
 ./lib/utils
 ./lib/utils/api_storage.dart
 ./lib/utils/helpers
+./lib/utils/helpers/character_mapper_util.dart
 ./lib/utils/helpers/story_generator_helper.dart
+./lib/utils/helpers/xml_parser_util.dart
 ./lib/utils/secure_storage.dart
 ./lib/utils/ui
 ./lib/utils/ui/api_key_input.dart
@@ -150,4 +153,4 @@
 ./windows/runner/win32_window.cpp
 ./windows/runner/win32_window.h
 
-43 directories, 108 files
+43 directories, 111 files

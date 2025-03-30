@@ -13,10 +13,7 @@ import 'package:path_provider/path_provider.dart';
 class StoryEditScreen extends StatefulWidget {
   final int storyId;
 
-  const StoryEditScreen({
-    super.key,
-    required this.storyId,
-  });
+  const StoryEditScreen({super.key, required this.storyId});
 
   @override
   State<StoryEditScreen> createState() => _StoryEditScreenState();
@@ -25,26 +22,26 @@ class StoryEditScreen extends StatefulWidget {
 class _StoryEditScreenState extends State<StoryEditScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   final ElevenLabsService _elevenLabsService = ElevenLabsService();
-  
+
   Story? _story;
   bool _isLoading = true;
   bool _isGeneratingVoice = false;
   int _selectedSceneIndex = 0;
-  
+
   @override
   void initState() {
     super.initState();
     _loadStory();
   }
-  
+
   Future<void> _loadStory() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final story = await _databaseHelper.getStory(widget.storyId);
-      
+
       if (mounted) {
         setState(() {
           _story = story;
@@ -56,7 +53,7 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
         setState(() {
           _isLoading = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error loading story: $e'),
@@ -66,28 +63,28 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
       }
     }
   }
-  
+
   void _handleSceneSelection(int index) {
     setState(() {
       _selectedSceneIndex = index;
     });
   }
-  
+
   Future<void> _handleVoiceGeneration(Script script) async {
     if (_story == null) return;
-    
+
     try {
       setState(() {
         _isGeneratingVoice = true;
       });
-      
+
       // Initialize ElevenLabs service if needed
       await _elevenLabsService.initialize();
-      
+
       // Find character associated with this script (null for narrator)
       Character? character;
       String? voiceId;
-      
+
       if (script.characterId != null) {
         character = _story!.characters.firstWhere(
           (char) => char.id == script.characterId,
@@ -95,19 +92,19 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
         );
         voiceId = character.voiceId;
       }
-      
+
       // Create output directory for audio files if it doesn't exist
       final appDocDir = await getApplicationDocumentsDirectory();
       final outputDir = Directory('${appDocDir.path}/voiceovers');
       if (!await outputDir.exists()) {
         await outputDir.create(recursive: true);
       }
-      
+
       // Generate a filename for the audio file
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final filename = 'script_${script.id}_$timestamp.mp3';
       final outputPath = '${outputDir.path}/$filename';
-      
+
       // Generate the voiceover
       await _elevenLabsService.generateVoiceover(
         text: script.scriptText,
@@ -116,13 +113,13 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
         voiceDescription: character?.voiceDescription,
         voiceId: voiceId,
       );
-      
+
       // Update the script with the new voiceover path
       await _databaseHelper.updateScriptVoiceoverPath(script.id!, outputPath);
-      
+
       // Reload the story to get the updated data
       await _loadStory();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -148,12 +145,15 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
       }
     }
   }
-  
-  Future<void> _handleCharacterVoiceSelection(Character character, String voiceId) async {
+
+  Future<void> _handleCharacterVoiceSelection(
+    Character character,
+    String voiceId,
+  ) async {
     try {
       await _databaseHelper.updateCharacterVoiceId(character.id!, voiceId);
       await _loadStory(); // Reload to get updated data
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -198,68 +198,70 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _story == null
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _story == null
               ? const Center(child: Text('Story not found'))
               : ContentContainer(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Left sidebar with scenes list
-                      ScenesSidebar(
-                        scenes: _story!.scenes,
-                        selectedSceneIndex: _selectedSceneIndex,
-                        onSceneSelected: _handleSceneSelection,
-                      ),
-                      
-                      // Main content area
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Story details at the top
-                              StoryDetailsCard(
-                                story: _story!,
-                                onStoryUpdated: _loadStory,
-                              ),
-                              
-                              const SizedBox(height: 16),
-                              
-                              // Character list with voice selection
-                              CharacterListCard(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left sidebar with scenes list
+                    ScenesSidebar(
+                      scenes: _story!.scenes,
+                      selectedSceneIndex: _selectedSceneIndex,
+                      onSceneSelected: _handleSceneSelection,
+                    ),
+
+                    // Main content area
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Story details at the top
+                            StoryDetailsCard(
+                              story: _story!,
+                              onStoryUpdated: _loadStory,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Character list with voice selection
+                            CharacterListCard(
+                              characters: _story!.characters,
+                              onVoiceSelected: _handleCharacterVoiceSelection,
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Selected scene details
+                            if (_story!.scenes.isNotEmpty)
+                              SceneDetails(
+                                scene: _story!.scenes[_selectedSceneIndex],
                                 characters: _story!.characters,
-                                onVoiceSelected: _handleCharacterVoiceSelection,
+                                onGenerateVoice: _handleVoiceGeneration,
                               ),
-                              
-                              const SizedBox(height: 16),
-                              
-                              // Selected scene details
-                              if (_story!.scenes.isNotEmpty)
-                                SceneDetails(
-                                  scene: _story!.scenes[_selectedSceneIndex],
-                                  characters: _story!.characters,
-                                  onGenerateVoice: _handleVoiceGeneration,
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-      // Show loading indicator overlay when generating voice
-      floatingActionButton: _isGeneratingVoice
-          ? FloatingActionButton(
-              onPressed: null,
-              backgroundColor: AppColors.primary,
-              child: const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
-            )
-          : null,
+      // Show loading indicator overlay when generating voice
+      floatingActionButton:
+          _isGeneratingVoice
+              ? FloatingActionButton(
+                onPressed: null,
+                backgroundColor: AppColors.primary,
+                child: const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+              : null,
     );
   }
 }
