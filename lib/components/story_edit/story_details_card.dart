@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../models/story.dart';
 import '../../utils/ui/app_colors.dart';
+import '../../services/story_repair_service.dart';
 
 class StoryDetailsCard extends StatelessWidget {
   final Story story;
+  final VoidCallback? onStoryUpdated;
 
   const StoryDetailsCard({
     super.key,
     required this.story,
+    this.onStoryUpdated,
   });
 
   @override
@@ -34,12 +37,27 @@ class StoryDetailsCard extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.primary),
-                  onPressed: () {
-                    // TODO: Implement edit story details functionality
-                  },
-                  tooltip: 'Edit Story Details',
+                Row(
+                  children: [
+                    // Fix Story Button
+                    if (story.scenes.isEmpty || story.characters.isEmpty) // Only show if story has no scenes/characters
+                      Tooltip(
+                        message: 'Attempt to fix story structure by reparsing AI response',
+                        child: IconButton(
+                          icon: const Icon(Icons.healing, color: AppColors.accent3),
+                          onPressed: () => _repairStory(context),
+                          tooltip: 'Fix Story',
+                        ),
+                      ),
+                    // Edit button
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: AppColors.primary),
+                      onPressed: () {
+                        // TODO: Implement edit story details functionality
+                      },
+                      tooltip: 'Edit Story Details',
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -171,6 +189,86 @@ class StoryDetailsCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Attempt to repair the story by reparsing the AI response
+  Future<void> _repairStory(BuildContext context) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Fixing Story',
+            style: TextStyle(color: AppColors.primary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              const Text('Attempting to repair story structure...'),
+              const SizedBox(height: 8),
+              const Text(
+                'This will reanalyze the AI response and rebuild characters and scenes.',
+                style: TextStyle(fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      // Use the story repair service to fix the story
+      final repairService = StoryRepairService();
+      final success = await repairService.repairStory(story.id!);
+
+      // Pop the loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (context.mounted) {
+        if (success) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Story structure was successfully repaired!'),
+              backgroundColor: AppColors.accent2,
+            ),
+          );
+
+          // Refresh the screen
+          onStoryUpdated?.call();
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to repair story. Check console for details.'),
+              backgroundColor: AppColors.accent4,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Pop the loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error repairing story: $e'),
+            backgroundColor: AppColors.accent4,
+          ),
+        );
+      }
+    }
   }
 }
 

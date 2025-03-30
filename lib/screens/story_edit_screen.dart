@@ -221,7 +221,10 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Story details at the top
-                              StoryDetailsCard(story: _story!),
+                              StoryDetailsCard(
+                                story: _story!,
+                                onStoryUpdated: _loadStory,
+                              ),
                               
                               const SizedBox(height: 16),
                               
