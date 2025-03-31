@@ -221,17 +221,10 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Story details at the top
+                            // Story details with characters column
                             StoryDetailsCard(
                               story: _story!,
                               onStoryUpdated: _loadStory,
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Character list with voice selection
-                            CharacterListCard(
-                              characters: _story!.characters,
                               onVoiceSelected: _handleCharacterVoiceSelection,
                             ),
 
