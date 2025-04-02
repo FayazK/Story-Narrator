@@ -103,7 +103,7 @@ class ElevenlabsApiService {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       
       final response = await _dio.get(
-        '$_baseUrl/voices/shared',
+        '$_baseUrl/shared-voices',
         queryParameters: queryParams,
         options: Options(
           headers: {

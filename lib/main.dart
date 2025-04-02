@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'database/database_helper.dart';
 import 'screens/home_screen.dart';
 import 'screens/create_story_screen.dart';
@@ -14,7 +15,7 @@ void main() async {
   // Initialize database
   await initDatabase();
   
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 Future<void> initDatabase() async {
