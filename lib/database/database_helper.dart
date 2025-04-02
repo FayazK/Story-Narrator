@@ -9,6 +9,7 @@ import '../models/story.dart';
 import '../models/character.dart';
 import '../models/story_scene.dart';
 import '../models/script.dart';
+import '../models/voice.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -33,7 +34,7 @@ class DatabaseHelper {
     
     return await openDatabase(
       dbPath,
-      version: 3, // Increase version number to trigger migration
+      version: 4, // Increased version number to add voices table
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
@@ -52,6 +53,30 @@ class DatabaseHelper {
       } catch (e) {
         debugPrint('Error adding character_name column: $e');
         // If the column already exists or there's another issue, log it but don't crash
+      }
+    }
+    
+    if (oldVersion < 4) {
+      // Migration to version 4: Add voices table
+      try {
+        await db.execute('''
+          CREATE TABLE voices (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            category TEXT,
+            description TEXT,
+            preview_url TEXT,
+            gender TEXT,
+            accent TEXT,
+            age TEXT,
+            use_case TEXT,
+            sample_text TEXT,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        ''');
+        debugPrint('Created voices table');
+      } catch (e) {
+        debugPrint('Error creating voices table: $e');
       }
     }
   }
@@ -121,6 +146,23 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_scenes_number ON scenes (scene_number)');
     await db.execute('CREATE INDEX idx_scripts_scene_id ON scripts (scene_id)');
     await db.execute('CREATE INDEX idx_scripts_character_id ON scripts (character_id)');
+    
+    // Create voices table
+    await db.execute('''
+      CREATE TABLE voices (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT,
+        description TEXT,
+        preview_url TEXT,
+        gender TEXT,
+        accent TEXT,
+        age TEXT,
+        use_case TEXT,
+        sample_text TEXT,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
   }
 
   // Story CRUD operations
@@ -402,5 +444,95 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+  
+  // Voice CRUD operations
+  
+  /// Insert a new voice into the voices table
+  Future<void> insertVoice(Voice voice) async {
+    final Database db = await database;
+    
+    try {
+      await db.insert(
+        'voices',
+        voice.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace, // Replace if already exists
+      );
+    } catch (e) {
+      debugPrint('Error inserting voice: $e');
+      rethrow;
+    }
+  }
+  
+  /// Check if a voice is already in the library
+  Future<bool> isVoiceInLibrary(String voiceId) async {
+    final Database db = await database;
+    
+    try {
+      final result = await db.query(
+        'voices',
+        where: 'id = ?',
+        whereArgs: [voiceId],
+        limit: 1,
+      );
+      
+      return result.isNotEmpty;
+    } catch (e) {
+      debugPrint('Error checking if voice is in library: $e');
+      return false;
+    }
+  }
+  
+  /// Get all voices from the library
+  Future<List<Voice>> getAllVoices() async {
+    final Database db = await database;
+    
+    try {
+      final List<Map<String, dynamic>> maps = await db.query('voices');
+      
+      return List.generate(maps.length, (i) {
+        return Voice.fromMap(maps[i]);
+      });
+    } catch (e) {
+      debugPrint('Error getting all voices: $e');
+      return [];
+    }
+  }
+  
+  /// Get a voice by ID
+  Future<Voice?> getVoiceById(String voiceId) async {
+    final Database db = await database;
+    
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'voices',
+        where: 'id = ?',
+        whereArgs: [voiceId],
+        limit: 1,
+      );
+      
+      if (maps.isEmpty) return null;
+      
+      return Voice.fromMap(maps.first);
+    } catch (e) {
+      debugPrint('Error getting voice by ID: $e');
+      return null;
+    }
+  }
+  
+  /// Remove a voice from the library
+  Future<void> removeVoice(String voiceId) async {
+    final Database db = await database;
+    
+    try {
+      await db.delete(
+        'voices',
+        where: 'id = ?',
+        whereArgs: [voiceId],
+      );
+    } catch (e) {
+      debugPrint('Error removing voice: $e');
+      rethrow;
+    }
   }
 }

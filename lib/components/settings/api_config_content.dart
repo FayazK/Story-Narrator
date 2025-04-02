@@ -22,7 +22,7 @@ class ApiConfigContent extends StatelessWidget {
   final bool isElevenlabsKeyConfigured;
   final Map<String, dynamic>? elevenlabsUserInfo;
   final ValueChanged<String> onElevenlabsKeyChanged;
-  final VoidCallback onValidateElevenlabsKey;
+  final VoidCallback onValidateElevenlabsApiKey;
 
   const ApiConfigContent({
     super.key,
@@ -43,7 +43,7 @@ class ApiConfigContent extends StatelessWidget {
     required this.isElevenlabsKeyConfigured,
     required this.elevenlabsUserInfo,
     required this.onElevenlabsKeyChanged,
-    required this.onValidateElevenlabsKey,
+    required this.onValidateElevenlabsApiKey,
   });
 
   @override
@@ -226,7 +226,7 @@ class ApiConfigContent extends StatelessWidget {
                   isLoading: isValidatingElevenlabsKey,
                   isValid: isElevenlabsApiKeyValid,
                   onChanged: onElevenlabsKeyChanged,
-                  onValidate: onValidateElevenlabsKey,
+                  onValidate: onValidateElevenlabsApiKey,
                 ),
                 
                 // Help text

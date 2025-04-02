@@ -3,10 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../utils/secure_storage.dart';
+import '../services/elevenlabs_api_service.dart';
+import '../models/voice.dart';
 
 class ElevenLabsService {
   static const String _baseUrl = 'https://api.elevenlabs.io/v1';
   String? _apiKey;
+  final ElevenlabsApiService _apiService = ElevenlabsApiService();
 
   // Voice IDs for different character types
   static const Map<String, String> _voiceProfiles = {
@@ -124,6 +127,55 @@ class ElevenLabsService {
 
     final Map<String, dynamic> data = jsonDecode(response.body);
     return List<Map<String, dynamic>>.from(data['voices']);
+  }
+  
+  /// Get shared voices from ElevenLabs
+  Future<List<Voice>> getSharedVoices({
+    int pageSize = 30,
+    int page = 1,
+    String? category,
+    String? gender,
+    String? search,
+  }) async {
+    // Ensure API key is loaded
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      await initialize();
+    }
+    
+    final voices = await _apiService.getSharedVoices(
+      _apiKey!,
+      pageSize: pageSize,
+      page: page,
+      category: category,
+      gender: gender,
+      search: search,
+    );
+    
+    if (voices == null) {
+      return [];
+    }
+    
+    return voices;
+  }
+  
+  /// Get audio preview for a voice
+  Future<String?> getVoicePreviewAudio(String voiceId, String previewText) async {
+    // Ensure API key is loaded
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      await initialize();
+    }
+    
+    return await _apiService.getVoiceAudioUrl(_apiKey!, voiceId, previewText);
+  }
+  
+  /// Add a shared voice to the user's library
+  Future<bool> addSharedVoiceToLibrary(String voiceId) async {
+    // Ensure API key is loaded
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      await initialize();
+    }
+    
+    return await _apiService.addSharedVoiceToLibrary(_apiKey!, voiceId);
   }
 
   /// Process voice parameters based on language and Urdu flavor

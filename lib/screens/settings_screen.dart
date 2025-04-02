@@ -4,6 +4,7 @@ import '../services/elevenlabs_api_service.dart';
 import '../utils/secure_storage.dart';
 import '../utils/ui/app_colors.dart';
 import '../components/settings/index.dart';
+import '../components/settings/voices/voices_content.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -244,6 +245,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSettingContent() {
     switch (_selectedSettingIndex) {
       case 0:
+        return const VoicesContent();
+      case 1:
         return ApiConfigContent(
           // Gemini API properties
           geminiApiKey: _geminiApiKey,
@@ -284,29 +287,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
               }
             });
           },
-          onValidateElevenlabsKey: _validateElevenlabsApiKey,
+          onValidateElevenlabsApiKey: _validateElevenlabsApiKey,
         );
-      case 1:
+      case 2:
         return const PlaceholderContent(
           title: 'Voice Settings',
           icon: Icons.record_voice_over,
         );
-      case 2:
+      case 3:
         return const PlaceholderContent(
           title: 'Appearance Settings',
           icon: Icons.color_lens_outlined,
         );
-      case 3:
+      case 4:
         return const PlaceholderContent(
           title: 'Keyboard Shortcuts',
           icon: Icons.keyboard,
         );
-      case 4:
+      case 5:
         return const PlaceholderContent(
           title: 'Storage Management',
           icon: Icons.storage,
         );
-      case 5:
+      case 6:
         return const AboutContent();
       default:
         return const SizedBox.shrink();

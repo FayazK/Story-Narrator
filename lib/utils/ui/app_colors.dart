@@ -29,6 +29,11 @@ class AppColors {
   static const Color accent3 = Color(0xFFFFC107);      // amber for warnings
   static const Color accent4 = Color(0xFFF44336);      // red for errors
   
+  // Status colors
+  static const Color success = Color(0xFF4CAF50);      // green for success
+  static const Color warning = Color(0xFFFFC107);      // amber for warnings
+  static const Color danger = Color(0xFFF44336);       // red for errors/danger
+  
   // Desktop-specific UI colors
   static const Color sidebarBg = Color(0xFF2C2C2C);    // dark sidebar
   static const Color sidebarText = Color(0xFFE0E0E0);  // sidebar text
