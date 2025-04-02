@@ -71,6 +71,8 @@ class DatabaseHelper {
             age TEXT,
             use_case TEXT,
             sample_text TEXT,
+            language TEXT,
+            locale TEXT,
             added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         ''');
@@ -160,6 +162,8 @@ class DatabaseHelper {
         age TEXT,
         use_case TEXT,
         sample_text TEXT,
+        language TEXT,
+        locale TEXT,
         added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     ''');

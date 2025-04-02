@@ -14,6 +14,8 @@ class Voice {
   final String? sampleText;
   final bool isAddedToLibrary;
   final DateTime? addedAt;
+  final String? language;
+  final String? locale;
 
   Voice({
     required this.id,
@@ -28,6 +30,8 @@ class Voice {
     this.sampleText,
     this.isAddedToLibrary = false,
     this.addedAt,
+    this.language,
+    this.locale,
   });
 
   Voice copyWith({
@@ -43,6 +47,8 @@ class Voice {
     String? sampleText,
     bool? isAddedToLibrary,
     DateTime? addedAt,
+    String? language,
+    String? locale,
   }) {
     return Voice(
       id: id ?? this.id,
@@ -57,6 +63,8 @@ class Voice {
       sampleText: sampleText ?? this.sampleText,
       isAddedToLibrary: isAddedToLibrary ?? this.isAddedToLibrary,
       addedAt: addedAt ?? this.addedAt,
+      language: language ?? this.language,
+      locale: locale ?? this.locale,
     );
   }
 
@@ -73,6 +81,8 @@ class Voice {
       'use_case': useCase,
       'sample_text': sampleText,
       'added_at': addedAt?.toIso8601String(),
+      'language': language,
+      'locale': locale,
     };
   }
 
@@ -92,24 +102,27 @@ class Voice {
       addedAt: map['added_at'] != null 
           ? DateTime.parse(map['added_at']) 
           : null,
+      language: map['language'],
+      locale: map['locale'],
     );
   }
 
   // For API data conversion
   factory Voice.fromJson(Map<String, dynamic> json, {bool isInLibrary = false}) {
-    // Handle different API response structures
     return Voice(
-      id: json['voice_id'] ?? json['id'],
+      id: json['voice_id'],
       name: json['name'],
       description: json['description'],
       category: json['category'],
-      gender: json['labels']?['gender'],
-      accent: json['labels']?['accent'],
-      age: json['labels']?['age'],
-      useCase: json['labels']?['use_case'] ?? json['useCase'],
+      gender: json['gender'],
+      accent: json['accent'],
+      age: json['age'],
+      useCase: json['use_case'],
       previewUrl: json['preview_url'],
-      sampleText: json['sample_text'] ?? json['preview_text'],
-      isAddedToLibrary: isInLibrary,
+      sampleText: json['sample_text'] ?? 'Hello, this is a sample of my voice. How do you like it?',
+      isAddedToLibrary: json['is_added_by_user'] ?? isInLibrary,
+      language: json['language'],
+      locale: json['locale'],
     );
   }
 

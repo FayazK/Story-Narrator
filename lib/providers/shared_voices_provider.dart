@@ -170,35 +170,19 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
     }
 
     try {
+      // Find the voice in the list
+      final voice = state.voices.firstWhere((v) => v.id == voiceId);
+      if (voice.previewUrl == null || voice.previewUrl!.isEmpty) {
+        throw Exception('No preview URL available for this voice');
+      }
+      
       // Update state to show which voice is playing
       state = state.copyWith(
         currentlyPlayingVoiceId: voiceId,
       );
 
-      // Get voice preview URL or generate one
-      final audioUrl = await _elevenLabsService.getVoicePreviewAudio(voiceId, previewText);
-      
-      if (audioUrl == null) {
-        throw Exception('Failed to get voice preview');
-      }
-      
-      // If URL starts with data:, it's a base64 encoded audio
-      if (audioUrl.startsWith('data:')) {
-        // Extract base64 data
-        final base64Data = audioUrl.split(',')[1];
-        // Play audio from memory
-        await state.audioPlayer.setAudioSource(
-          AudioSource.uri(Uri.dataFromString(
-            base64Data,
-            mimeType: 'audio/mpeg',
-            encoding: Encoding.getByName('base64'),
-          )),
-        );
-      } else {
-        // Play audio from URL
-        await state.audioPlayer.setUrl(audioUrl);
-      }
-      
+      // Play the preview directly from the URL
+      await state.audioPlayer.setUrl(voice.previewUrl!);
       await state.audioPlayer.play();
       
       // Set up listener for when audio finishes

@@ -89,12 +89,15 @@ class ElevenlabsApiService {
     String? category,
     String? gender,
     String? search,
+    bool featured = false,
+    bool readerAppEnabled = true,
   }) async {
     try {
       // Build query parameters
       final Map<String, dynamic> queryParams = {
         'page_size': pageSize,
-        'page': page,
+        'featured': featured,
+        'reader_app_enabled': readerAppEnabled,
       };
       
       // Add optional filters if present
@@ -114,12 +117,14 @@ class ElevenlabsApiService {
       );
       
       if (response.statusCode == 200) {
-        final List<dynamic> voicesData = response.data['voices'] ?? [];
+        final responseData = response.data as Map<String, dynamic>;
+        final List<dynamic> voicesData = responseData['voices'] ?? [];
         return voicesData.map((voice) => Voice.fromJson(voice)).toList();
       }
       
       return null;
     } catch (e) {
+      print('Error fetching shared voices: $e');
       return null;
     }
   }
