@@ -22,7 +22,7 @@ class StoryList extends StatelessWidget {
             Icon(
               Icons.book_outlined,
               size: 64,
-              color: AppColors.textMedium.withOpacity(0.5),
+              color: Color.fromRGBO(117, 117, 117, 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -36,10 +36,7 @@ class StoryList extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Create your first story to get started',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textMedium,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textMedium),
             ),
           ],
         ),
@@ -64,19 +61,14 @@ class _StoryCard extends StatelessWidget {
   final Story story;
   final VoidCallback onTap;
 
-  const _StoryCard({
-    required this.story,
-    required this.onTap,
-  });
+  const _StoryCard({required this.story, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -90,19 +82,15 @@ class _StoryCard extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withOpacity(0.3),
+                  color: Color.fromRGBO(209, 196, 233, 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.book,
-                    size: 36,
-                    color: AppColors.primary,
-                  ),
+                  child: Icon(Icons.book, size: 36, color: AppColors.primary),
                 ),
               ),
               const SizedBox(width: 16),
-              
+
               // Story details
               Expanded(
                 child: Column(
@@ -117,7 +105,7 @@ class _StoryCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Created date
                     if (story.createdAt != null)
                       Text(
@@ -127,9 +115,9 @@ class _StoryCard extends StatelessWidget {
                           color: AppColors.textMedium,
                         ),
                       ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Stats row
                     Row(
                       children: [
@@ -149,12 +137,9 @@ class _StoryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Edit icon
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.textMedium,
-              ),
+              Icon(Icons.chevron_right, color: AppColors.textMedium),
             ],
           ),
         ),
@@ -179,7 +164,7 @@ class _StatBubble extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.primaryLight.withOpacity(0.2),
+        color: Color.fromRGBO(209, 196, 233, 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
