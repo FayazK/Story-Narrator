@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../utils/ui/app_colors.dart';
 import '../../../models/voice.dart';
-// import '../../../providers/shared_voices_provider.dart'; // Removed unused import
 
 class VoiceCard extends StatelessWidget {
   // Changed to StatelessWidget
