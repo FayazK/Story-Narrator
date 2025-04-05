@@ -4,7 +4,8 @@ import '../services/elevenlabs_api_service.dart';
 import '../utils/secure_storage.dart';
 import '../utils/ui/app_colors.dart';
 import '../components/settings/index.dart';
-import '../components/settings/voices/voices_content.dart';
+// import '../components/settings/voices/voices_content.dart'; // Removed Shared voices
+import '../components/settings/voices/user_voices_content.dart'; // User voices
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,14 +17,14 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final GeminiApiService _geminiApiService = GeminiApiService();
   final ElevenlabsApiService _elevenlabsApiService = ElevenlabsApiService();
-  
+
   // Gemini settings
   String _geminiApiKey = '';
   bool _isGeminiApiKeyValid = false;
   bool _isValidatingGeminiKey = false;
   String? _geminiErrorText;
   bool _isGeminiKeyConfigured = false;
-  
+
   // ElevenLabs settings
   String _elevenlabsApiKey = '';
   bool _isElevenlabsApiKeyValid = false;
@@ -32,19 +33,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _elevenlabsUserInfo;
   bool _isLoadingElevenlabsInfo = false;
   bool _isElevenlabsKeyConfigured = false;
-  
+
   // Settings navigation
   int _selectedSettingIndex = 0;
-  
+
   // Settings change tracking
   bool _hasChanges = false;
-  
+
   @override
   void initState() {
     super.initState();
     _loadSavedSettings();
   }
-  
+
   // Load saved settings from storage
   Future<void> _loadSavedSettings() async {
     setState(() {
@@ -54,12 +55,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     // Check if keys are configured
     _isGeminiKeyConfigured = await SecureStorageManager.isGeminiKeyConfigured();
-    _isElevenlabsKeyConfigured = await SecureStorageManager.isElevenlabsKeyConfigured();
-    
+    _isElevenlabsKeyConfigured =
+        await SecureStorageManager.isElevenlabsKeyConfigured();
+
     // Load API keys from secure storage
     final geminiApiKey = await SecureStorageManager.getGeminiApiKey();
     final elevenlabsApiKey = await SecureStorageManager.getElevenlabsApiKey();
-    
+
     // Set Gemini API key if available
     if (geminiApiKey?.isNotEmpty == true) {
       setState(() {
@@ -67,23 +69,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _isGeminiApiKeyValid = true;
       });
     }
-    
+
     // Set ElevenLabs API key if available
     if (elevenlabsApiKey?.isNotEmpty == true) {
       setState(() {
         _elevenlabsApiKey = elevenlabsApiKey ?? '';
         _isElevenlabsApiKeyValid = true;
       });
-      
+
       // Load user info if API key is available
       if (_isElevenlabsKeyConfigured) {
         _loadElevenlabsUserInfo();
       }
     }
-    
+
     setState(() {});
   }
-  
+
   // Validate Gemini API key
   Future<void> _validateGeminiApiKey() async {
     if (_geminiApiKey.isEmpty) {
@@ -93,21 +95,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
       return;
     }
-    
+
     setState(() {
       _isValidatingGeminiKey = true;
       _geminiErrorText = null;
     });
-    
+
     final isValid = await _geminiApiService.validateApiKey(_geminiApiKey);
-    
+
     setState(() {
       _isGeminiApiKeyValid = isValid;
       _isValidatingGeminiKey = false;
       _geminiErrorText = isValid ? null : 'Invalid API key';
       _hasChanges = true;
     });
-    
+
     if (isValid) {
       await SecureStorageManager.saveGeminiApiKey(_geminiApiKey);
       setState(() {
@@ -115,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
     }
   }
-  
+
   // Validate ElevenLabs API key and load user info
   Future<void> _validateElevenlabsApiKey() async {
     if (_elevenlabsApiKey.isEmpty) {
@@ -125,21 +127,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
       return;
     }
-    
+
     setState(() {
       _isValidatingElevenlabsKey = true;
       _elevenlabsErrorText = null;
     });
-    
-    final isValid = await _elevenlabsApiService.validateApiKey(_elevenlabsApiKey);
-    
+
+    final isValid = await _elevenlabsApiService.validateApiKey(
+      _elevenlabsApiKey,
+    );
+
     setState(() {
       _isElevenlabsApiKeyValid = isValid;
       _isValidatingElevenlabsKey = false;
       _elevenlabsErrorText = isValid ? null : 'Invalid API key';
       _hasChanges = true;
     });
-    
+
     if (isValid) {
       await SecureStorageManager.saveElevenlabsApiKey(_elevenlabsApiKey);
       setState(() {
@@ -148,17 +152,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _loadElevenlabsUserInfo();
     }
   }
-  
+
   // Load ElevenLabs user info
   Future<void> _loadElevenlabsUserInfo() async {
     if (!_isElevenlabsApiKeyValid) return;
-    
+
     setState(() {
       _isLoadingElevenlabsInfo = true;
     });
-    
+
     final userInfo = await _elevenlabsApiService.getUserInfo(_elevenlabsApiKey);
-    
+
     setState(() {
       _elevenlabsUserInfo = userInfo;
       _isLoadingElevenlabsInfo = false;
@@ -170,11 +174,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (_geminiApiKey.isNotEmpty && !_isGeminiApiKeyValid) {
       await _validateGeminiApiKey();
     }
-    
+
     if (_elevenlabsApiKey.isNotEmpty && !_isElevenlabsApiKeyValid) {
       await _validateElevenlabsApiKey();
     }
-    
+
     // Show a success message
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
-    
+
     setState(() {
       _hasChanges = false;
     });
@@ -230,23 +234,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onSavePressed: _saveSettings,
               hasChanges: _hasChanges,
             ),
-            
+
             // Main content area
-            Expanded(
-              child: _buildSettingContent(),
-            ),
+            Expanded(child: _buildSettingContent()),
           ],
         ),
       ),
     );
   }
-  
+
   // Build settings content based on selected index
   Widget _buildSettingContent() {
     switch (_selectedSettingIndex) {
-      case 0:
-        return const VoicesContent();
-      case 1:
+      case 0: // Was case 1 (User Voices)
+        return const UserVoicesContent();
+      // Case 0 (Shared Voices) removed
+      case 1: // Index shifted from 2 to 1
         return ApiConfigContent(
           // Gemini API properties
           geminiApiKey: _geminiApiKey,
@@ -259,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _geminiApiKey = value;
               _isGeminiApiKeyValid = false;
               _hasChanges = true;
-              
+
               // Clear error when typing
               if (_geminiErrorText != null) {
                 _geminiErrorText = null;
@@ -267,7 +270,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             });
           },
           onValidateGeminiKey: _validateGeminiApiKey,
-          
+
           // ElevenLabs API properties
           elevenlabsApiKey: _elevenlabsApiKey,
           isElevenlabsApiKeyValid: _isElevenlabsApiKeyValid,
@@ -280,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _elevenlabsApiKey = value;
               _isElevenlabsApiKeyValid = false;
               _hasChanges = true;
-              
+
               // Clear error when typing
               if (_elevenlabsErrorText != null) {
                 _elevenlabsErrorText = null;
@@ -289,27 +292,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
           onValidateElevenlabsApiKey: _validateElevenlabsApiKey,
         );
-      case 2:
+      case 2: // Index shifted from 3 to 2
         return const PlaceholderContent(
           title: 'Voice Settings',
           icon: Icons.record_voice_over,
         );
-      case 3:
+      case 3: // Index shifted from 4 to 3
         return const PlaceholderContent(
           title: 'Appearance Settings',
           icon: Icons.color_lens_outlined,
         );
-      case 4:
+      case 4: // Index shifted from 5 to 4
         return const PlaceholderContent(
           title: 'Keyboard Shortcuts',
           icon: Icons.keyboard,
         );
-      case 5:
+      case 5: // Index shifted from 6 to 5
         return const PlaceholderContent(
           title: 'Storage Management',
           icon: Icons.storage,
         );
-      case 6:
+      case 6: // Index shifted from 7 to 6
         return const AboutContent();
       default:
         return const SizedBox.shrink();

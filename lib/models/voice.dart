@@ -99,30 +99,34 @@ class Voice {
       useCase: map['use_case'],
       sampleText: map['sample_text'],
       isAddedToLibrary: map['added_at'] != null,
-      addedAt: map['added_at'] != null 
-          ? DateTime.parse(map['added_at']) 
-          : null,
+      addedAt: map['added_at'] != null ? DateTime.parse(map['added_at']) : null,
       language: map['language'],
       locale: map['locale'],
     );
   }
 
   // For API data conversion
-  factory Voice.fromJson(Map<String, dynamic> json, {bool isInLibrary = false}) {
+  factory Voice.fromJson(
+    Map<String, dynamic> json, {
+    bool isInLibrary = false,
+  }) {
+    // Handle potential null labels map
+    final labels = json['labels'] as Map<String, dynamic>? ?? {};
+
     return Voice(
       id: json['voice_id'],
       name: json['name'],
-      description: json['description'],
+      description: json['description'], // Use top-level description
       category: json['category'],
-      gender: json['gender'],
-      accent: json['accent'],
-      age: json['age'],
-      useCase: json['use_case'],
+      gender: labels['gender'], // Get from labels
+      accent: labels['accent'], // Get from labels
+      age: labels['age'], // Get from labels
+      useCase: labels['use_case'], // Get from labels
       previewUrl: json['preview_url'],
-      sampleText: json['sample_text'] ?? 'Hello, this is a sample of my voice. How do you like it?',
-      isAddedToLibrary: json['is_added_by_user'] ?? isInLibrary,
-      language: json['language'],
-      locale: json['locale'],
+      // sampleText: json['sample_text'] ?? 'Hello, this is a sample of my voice. How do you like it?', // Sample text not in v2/voices response
+      // isAddedToLibrary: json['is_added_by_user'] ?? isInLibrary, // is_added_by_user not in v2/voices response
+      // language: json['language'], // Consider mapping from verified_languages if needed
+      // locale: json['locale'], // locale not in v2/voices response
     );
   }
 

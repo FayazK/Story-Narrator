@@ -3,20 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../utils/ui/app_colors.dart';
 import '../../../models/voice.dart';
-import '../../../providers/shared_voices_provider.dart';
+// import '../../../providers/shared_voices_provider.dart'; // Removed unused import
 
-class VoiceCard extends ConsumerWidget {
+class VoiceCard extends StatelessWidget {
+  // Changed to StatelessWidget
   final Voice voice;
   final bool isPlaying;
+  final VoidCallback onPlayPause; // Added callback
+  final VoidCallback onAddRemove; // Added callback
 
   const VoiceCard({
     super.key,
     required this.voice,
     this.isPlaying = false,
+    required this.onPlayPause, // Made required
+    required this.onAddRemove, // Made required
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    // Removed WidgetRef
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -38,7 +44,7 @@ class VoiceCard extends ConsumerWidget {
             children: [
               // Header with gender badge
               _buildVoiceHeader(),
-              
+
               // Voice details
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -61,7 +67,10 @@ class VoiceCard extends ConsumerWidget {
                         ),
                         if (voice.language != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             margin: const EdgeInsets.only(left: 8),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade100,
@@ -79,7 +88,7 @@ class VoiceCard extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Voice accent and age
                     if (voice.accent != null || voice.age != null)
                       Text(
@@ -95,7 +104,7 @@ class VoiceCard extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     const SizedBox(height: 8),
-                    
+
                     // Voice description
                     if (voice.description != null)
                       Text(
@@ -107,30 +116,20 @@ class VoiceCard extends ConsumerWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Actions
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // Preview button
                         ElevatedButton.icon(
-                          onPressed: () {
-                            if (isPlaying) {
-                              ref.read(sharedVoicesProvider.notifier).stopVoicePreview();
-                            } else {
-                              ref.read(sharedVoicesProvider.notifier).playVoicePreview(
-                                    voice.id,
-                                    voice.sampleText ?? 'Hello, this is a sample of my voice. How do you like it?',
-                                  );
-                            }
-                          },
+                          onPressed: onPlayPause, // Use callback
                           style: ElevatedButton.styleFrom(
                             foregroundColor: Colors.white,
-                            backgroundColor: isPlaying 
-                                ? Colors.orange 
-                                : AppColors.primary,
+                            backgroundColor:
+                                isPlaying ? Colors.orange : AppColors.primary,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 8,
@@ -148,37 +147,34 @@ class VoiceCard extends ConsumerWidget {
                             style: const TextStyle(fontSize: 13),
                           ),
                         ),
-                        
+
                         // Add/Remove button
                         ElevatedButton.icon(
-                          onPressed: () {
-                            if (voice.isAddedToLibrary) {
-                              ref.read(sharedVoicesProvider.notifier).removeVoiceFromLibrary(voice.id);
-                            } else {
-                              ref.read(sharedVoicesProvider.notifier).addVoiceToLibrary(voice);
-                            }
-                          },
+                          onPressed: onAddRemove, // Use callback
                           style: ElevatedButton.styleFrom(
-                            foregroundColor: voice.isAddedToLibrary 
-                                ? AppColors.accent4 
-                                : Colors.white,
-                            backgroundColor: voice.isAddedToLibrary 
-                                ? Colors.white 
-                                : AppColors.accent2,
+                            foregroundColor:
+                                voice.isAddedToLibrary
+                                    ? AppColors.accent4
+                                    : Colors.white,
+                            backgroundColor:
+                                voice.isAddedToLibrary
+                                    ? Colors.white
+                                    : AppColors.accent2,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 8,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
-                              side: voice.isAddedToLibrary 
-                                  ? BorderSide(color: AppColors.accent4) 
-                                  : BorderSide.none,
+                              side:
+                                  voice.isAddedToLibrary
+                                      ? BorderSide(color: AppColors.accent4)
+                                      : BorderSide.none,
                             ),
                           ),
                           icon: Icon(
-                            voice.isAddedToLibrary 
-                                ? Icons.delete_outline 
+                            voice.isAddedToLibrary
+                                ? Icons.delete_outline
                                 : Icons.add,
                             size: 18,
                           ),
@@ -204,17 +200,14 @@ class VoiceCard extends ConsumerWidget {
     final Color headerColor = _getGenderColor();
     final String? useCase = voice.useCase;
     final String category = voice.category ?? '';
-    
+
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: headerColor.withOpacity(0.1),
         border: Border(
-          bottom: BorderSide(
-            color: headerColor.withOpacity(0.2),
-            width: 1,
-          ),
+          bottom: BorderSide(color: headerColor.withOpacity(0.2), width: 1),
         ),
       ),
       child: Row(
@@ -222,10 +215,7 @@ class VoiceCard extends ConsumerWidget {
         children: [
           // Gender badge
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: headerColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(4),
@@ -239,7 +229,7 @@ class VoiceCard extends ConsumerWidget {
               ),
             ),
           ),
-          
+
           // Use case and category
           Flexible(
             child: Text(
@@ -247,10 +237,7 @@ class VoiceCard extends ConsumerWidget {
                 if (useCase != null && useCase.isNotEmpty) useCase,
                 if (category.isNotEmpty) category,
               ].where((e) => e.isNotEmpty).join(' · '),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -263,7 +250,7 @@ class VoiceCard extends ConsumerWidget {
   // Get color based on gender
   Color _getGenderColor() {
     final gender = voice.gender?.toLowerCase() ?? '';
-    
+
     if (gender.contains('female')) {
       return Colors.purple.shade700;
     } else if (gender.contains('male')) {
