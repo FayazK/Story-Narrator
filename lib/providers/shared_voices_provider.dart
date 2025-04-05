@@ -1,19 +1,14 @@
 // lib/providers/shared_voices_provider.dart
-import 'dart:convert';
+import 'dart:async'; // Added for StreamSubscription
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import '../services/elevenlabs_service.dart';
+import '../services/elevenlabs_api_service.dart';
 import '../database/database_helper.dart';
 import '../models/voice.dart';
 
 // States for the shared voices feature
-enum SharedVoicesState {
-  initial,
-  loading,
-  loaded,
-  error,
-}
+enum SharedVoicesState { initial, loading, loaded, error }
 
 // State class for shared voices
 class SharedVoicesData {
@@ -45,8 +40,10 @@ class SharedVoicesData {
   SharedVoicesData copyWith({
     List<Voice>? voices,
     SharedVoicesState? state,
-    String? errorMessage,
-    String? currentlyPlayingVoiceId,
+    // Allow explicitly setting errorMessage to null
+    ValueGetter<String?>? errorMessage,
+    // Allow explicitly setting currentlyPlayingVoiceId to null
+    ValueGetter<String?>? currentlyPlayingVoiceId,
     bool? hasMoreVoices,
     int? currentPage,
     String? searchQuery,
@@ -57,8 +54,11 @@ class SharedVoicesData {
     return SharedVoicesData(
       voices: voices ?? this.voices,
       state: state ?? this.state,
-      errorMessage: errorMessage ?? this.errorMessage,
-      currentlyPlayingVoiceId: currentlyPlayingVoiceId ?? this.currentlyPlayingVoiceId,
+      errorMessage: errorMessage != null ? errorMessage() : this.errorMessage,
+      currentlyPlayingVoiceId:
+          currentlyPlayingVoiceId != null
+              ? currentlyPlayingVoiceId()
+              : this.currentlyPlayingVoiceId,
       hasMoreVoices: hasMoreVoices ?? this.hasMoreVoices,
       currentPage: currentPage ?? this.currentPage,
       searchQuery: searchQuery ?? this.searchQuery,
@@ -71,18 +71,23 @@ class SharedVoicesData {
 
 // Notifier class for shared voices
 class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
-  final ElevenLabsService _elevenLabsService;
+  final ElevenlabsApiService _elevenLabsService;
   final DatabaseHelper _databaseHelper;
+  StreamSubscription<PlayerState>?
+  _playerStateSubscription; // Added to manage listener
 
   SharedVoicesNotifier(this._elevenLabsService, this._databaseHelper)
-      : super(SharedVoicesData(
+    : super(
+        SharedVoicesData(
           voices: [],
           state: SharedVoicesState.initial,
           audioPlayer: AudioPlayer(),
-        ));
+        ),
+      );
 
   @override
   void dispose() {
+    _playerStateSubscription?.cancel(); // Cancel listener on dispose
     state.audioPlayer.dispose();
     super.dispose();
   }
@@ -92,18 +97,21 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
     bool refresh = false,
     int pageSize = 30,
   }) async {
+    // Avoid concurrent loads
+    if (state.state == SharedVoicesState.loading && !refresh) return;
+
     try {
       // Update state to loading
       state = state.copyWith(
         state: SharedVoicesState.loading,
-        errorMessage: null,
+        errorMessage: () => null, // Clear previous error
       );
 
       // If refreshing, reset page to 1
       final currentPage = refresh ? 1 : state.currentPage;
 
       // Fetch voices from API
-      final voices = await _elevenLabsService.getSharedVoices(
+      final fetchedVoices = await _elevenLabsService.getSharedVoices(
         pageSize: pageSize,
         page: currentPage,
         category: state.categoryFilter,
@@ -111,9 +119,16 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
         search: state.searchQuery,
       );
 
+      // Handle potential null response from API
+      if (fetchedVoices == null) {
+        throw Exception('API returned null voice list');
+      }
+
       // Check which voices are already in the database
       final List<Voice> enhancedVoices = [];
-      for (var voice in voices) {
+      for (var voice in fetchedVoices) {
+        // Iterate over the non-null list
+        // Assuming voice.id is non-nullable based on Voice model usage elsewhere
         final isInLibrary = await _databaseHelper.isVoiceInLibrary(voice.id);
         enhancedVoices.add(voice.copyWith(isAddedToLibrary: isInLibrary));
       }
@@ -122,21 +137,26 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
       state = state.copyWith(
         voices: refresh ? enhancedVoices : [...state.voices, ...enhancedVoices],
         state: SharedVoicesState.loaded,
-        hasMoreVoices: voices.length >= pageSize,
+        hasMoreVoices:
+            fetchedVoices.length >= pageSize, // Use non-null list here
         currentPage: currentPage + 1,
       );
     } catch (e) {
       // Handle errors
       state = state.copyWith(
         state: SharedVoicesState.error,
-        errorMessage: 'Failed to load shared voices: $e',
+        errorMessage: () => 'Failed to load shared voices: $e',
+        // If it was a refresh, keep existing voices, otherwise clear potentially partial list
+        voices: refresh ? state.voices : [],
+        hasMoreVoices: false, // Assume no more voices on error
       );
     }
   }
 
   // Method to load more voices (pagination)
   Future<void> loadMoreVoices() async {
-    if (state.state == SharedVoicesState.loading || !state.hasMoreVoices) return;
+    if (state.state == SharedVoicesState.loading || !state.hasMoreVoices)
+      return;
     await loadSharedVoices(refresh: false);
   }
 
@@ -151,61 +171,113 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
     String? categoryFilter,
     String? genderFilter,
   }) async {
-    // Update filter state
+    // Update filter state immediately for responsiveness (optional)
     state = state.copyWith(
       searchQuery: searchQuery,
       categoryFilter: categoryFilter,
       genderFilter: genderFilter,
+      currentPage: 1, // Reset page when filters change
+      hasMoreVoices:
+          false, // Assume new filter might have fewer results initially
+      voices: [], // Clear existing voices for new filter results
+      state: SharedVoicesState.loading, // Show loading indicator immediately
     );
-    
+
     // Refresh voices with new filters
     await refreshVoices();
   }
 
   // Method to play voice preview
   Future<void> playVoicePreview(String voiceId, String previewText) async {
-    // Stop current playback if any
-    if (state.currentlyPlayingVoiceId != null) {
-      await state.audioPlayer.stop();
-    }
+    // Stop current playback and cancel previous listener
+    await stopVoicePreview();
 
     try {
       // Find the voice in the list
       final voice = state.voices.firstWhere((v) => v.id == voiceId);
-      if (voice.previewUrl == null || voice.previewUrl!.isEmpty) {
-        throw Exception('No preview URL available for this voice');
-      }
-      
+
       // Update state to show which voice is playing
       state = state.copyWith(
-        currentlyPlayingVoiceId: voiceId,
+        currentlyPlayingVoiceId: () => voiceId,
+        errorMessage: () => null, // Clear error on new playback attempt
       );
 
-      // Play the preview directly from the URL
-      await state.audioPlayer.setUrl(voice.previewUrl!);
-      await state.audioPlayer.play();
-      
-      // Set up listener for when audio finishes
-      state.audioPlayer.playerStateStream.listen((playerState) {
-        if (playerState.processingState == ProcessingState.completed) {
-          stopVoicePreview();
+      String? urlToPlay;
+
+      // First try to use the previewUrl directly if available
+      if (voice.previewUrl != null && voice.previewUrl!.isNotEmpty) {
+        urlToPlay = voice.previewUrl!;
+      } else {
+        // If no previewUrl is available, generate one
+        final generatedUrl = await _elevenLabsService.getVoicePreviewAudio(
+          voiceId,
+          previewText,
+        );
+
+        if (generatedUrl == null) {
+          throw Exception('Failed to get preview audio URL');
         }
+        urlToPlay = generatedUrl;
+      }
+
+      // Ensure URL is not null before proceeding
+      if (urlToPlay == null) {
+        throw Exception('Audio URL is null');
+      }
+
+      // Play the audio
+      await state.audioPlayer.setUrl(urlToPlay);
+      await state.audioPlayer.play();
+
+      // Cancel any previous listener before starting new playback (redundant check, but safe)
+      await _playerStateSubscription?.cancel();
+      _playerStateSubscription = null; // Clear reference
+
+      // Set up listener for when audio finishes
+      _playerStateSubscription = state.audioPlayer.playerStateStream.listen((
+        playerState,
+      ) {
+        if (playerState.processingState == ProcessingState.completed) {
+          // Check if it's still the currently playing voice before stopping
+          if (state.currentlyPlayingVoiceId == voiceId) {
+            stopVoicePreview();
+          }
+        }
+        // Note: Runtime playback errors (after successful start) might need
+        // more specific handling if required, potentially via other streams
+        // or observing unexpected state transitions (e.g., back to idle).
+        // The primary error handling is in the surrounding try-catch block.
       });
     } catch (e) {
       debugPrint('Error playing voice preview: $e');
+      // Update state with error message
       state = state.copyWith(
-        currentlyPlayingVoiceId: null,
+        currentlyPlayingVoiceId: () => null, // Clear playing ID on error
+        errorMessage: () => 'Failed to play preview: $e',
       );
+      // Ensure player is stopped if an error occurred before playback started
+      if (state.audioPlayer.playing) {
+        await state.audioPlayer.stop();
+      }
+      _playerStateSubscription?.cancel(); // Clean up listener on error too
+      _playerStateSubscription = null;
     }
   }
 
   // Method to stop voice preview
   Future<void> stopVoicePreview() async {
-    if (state.currentlyPlayingVoiceId != null) {
+    // Cancel listener first
+    await _playerStateSubscription?.cancel();
+    _playerStateSubscription = null; // Clear reference
+
+    // Stop playback only if it's actually playing
+    if (state.audioPlayer.playing) {
       await state.audioPlayer.stop();
-      state = state.copyWith(
-        currentlyPlayingVoiceId: null,
-      );
+    }
+
+    // Only update state if a voice ID was set, to avoid unnecessary rebuilds
+    if (state.currentlyPlayingVoiceId != null) {
+      state = state.copyWith(currentlyPlayingVoiceId: () => null);
     }
   }
 
@@ -213,33 +285,37 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
   Future<void> addVoiceToLibrary(Voice voice) async {
     try {
       // Add to ElevenLabs library first
-      final success = await _elevenLabsService.addSharedVoiceToLibrary(voice.id);
-      
+      final success = await _elevenLabsService.addSharedVoiceToLibrary(
+        voice.id,
+      );
+
       if (!success) {
         throw Exception('Failed to add voice to ElevenLabs library');
       }
-      
+
       // Add to local database
       final voiceWithTimestamp = voice.copyWith(
         isAddedToLibrary: true,
         addedAt: DateTime.now(),
       );
-      
+
       await _databaseHelper.insertVoice(voiceWithTimestamp);
-      
+
       // Update voice in state
-      final voices = [...state.voices];
+      final voices = List<Voice>.from(state.voices); // Create mutable copy
       final index = voices.indexWhere((v) => v.id == voice.id);
-      
+
       if (index != -1) {
-        voices[index] = voiceWithTimestamp;
+        voices[index] = voiceWithTimestamp; // Update the item
         state = state.copyWith(
-          voices: voices,
+          voices: voices, // Assign the updated list
         );
       }
     } catch (e) {
       debugPrint('Error adding voice to library: $e');
-      rethrow;
+      // Optionally update state with an error message for the UI
+      // state = state.copyWith(errorMessage: () => 'Failed to add voice: $e');
+      rethrow; // Rethrow to allow UI to handle specific errors if needed
     }
   }
 
@@ -248,20 +324,26 @@ class SharedVoicesNotifier extends StateNotifier<SharedVoicesData> {
     try {
       // Remove from local database
       await _databaseHelper.removeVoice(voiceId);
-      
+
       // Update voice in state
-      final voices = [...state.voices];
+      final voices = List<Voice>.from(state.voices); // Create mutable copy
       final index = voices.indexWhere((v) => v.id == voiceId);
-      
+
       if (index != -1) {
-        voices[index] = voices[index].copyWith(isAddedToLibrary: false);
+        // Update the specific voice instance
+        voices[index] = voices[index].copyWith(
+          isAddedToLibrary: false,
+          addedAt: null,
+        ); // Clear addedAt too
         state = state.copyWith(
-          voices: voices,
+          voices: voices, // Assign the updated list
         );
       }
     } catch (e) {
       debugPrint('Error removing voice from library: $e');
-      rethrow;
+      // Optionally update state with an error message for the UI
+      // state = state.copyWith(errorMessage: () => 'Failed to remove voice: $e');
+      rethrow; // Rethrow to allow UI to handle specific errors if needed
     }
   }
 }
@@ -271,12 +353,17 @@ final databaseHelperProvider = Provider<DatabaseHelper>((ref) {
   return DatabaseHelper();
 });
 
-final elevenLabsServiceProvider = Provider<ElevenLabsService>((ref) {
-  return ElevenLabsService();
+final elevenLabsServiceProvider = Provider<ElevenlabsApiService>((ref) {
+  // Consider adding error handling or configuration here if needed
+  return ElevenlabsApiService();
 });
 
-final sharedVoicesProvider = StateNotifierProvider<SharedVoicesNotifier, SharedVoicesData>((ref) {
-  final elevenLabsService = ref.watch(elevenLabsServiceProvider);
-  final databaseHelper = ref.watch(databaseHelperProvider);
-  return SharedVoicesNotifier(elevenLabsService, databaseHelper);
-});
+final sharedVoicesProvider =
+    StateNotifierProvider<SharedVoicesNotifier, SharedVoicesData>((ref) {
+      final elevenLabsService = ref.watch(elevenLabsServiceProvider);
+      final databaseHelper = ref.watch(databaseHelperProvider);
+      // Load initial voices when the provider is first created
+      final notifier = SharedVoicesNotifier(elevenLabsService, databaseHelper);
+      notifier.loadSharedVoices(); // Trigger initial load
+      return notifier;
+    });

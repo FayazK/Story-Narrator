@@ -8,11 +8,12 @@ import '../models/character.dart';
 import '../utils/xml_parser.dart';
 import '../utils/helpers/xml_parser_util.dart';
 import '../utils/helpers/character_mapper_util.dart';
-import 'elevenlabs_service.dart';
+import 'elevenlabs_api_service.dart'; // Changed import
 
 class StoryService {
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final ElevenLabsService _elevenLabsService = ElevenLabsService();
+  final ElevenlabsApiService _elevenLabsService =
+      ElevenlabsApiService(); // Changed type
 
   /// Extract XML content from text
   String _extractXml(String text) {
@@ -25,13 +26,13 @@ class StoryService {
     try {
       // Extract just the XML content in case there's extra text
       final purifiedXml = _extractXml(xmlString);
-      
+
       // Parse XML to Story object
       Story story = StoryXmlParser.parseStoryXml(purifiedXml);
-      
+
       // Process character mappings to ensure proper relationships
       story = CharacterMapperUtil.mapCharacterScripts(story);
-  
+
       // Save to database
       return await _dbHelper.insertCompleteStory(story);
     } catch (e) {
@@ -145,9 +146,10 @@ class StoryService {
 
   /// Get available ElevenLabs voices
   Future<List<Map<String, dynamic>>> getAvailableVoices() async {
-    return await _elevenLabsService.getAvailableVoices();
+    final voices = await _elevenLabsService.getAvailableVoices();
+    return voices ?? []; // Return empty list if null
   }
-  
+
   /// Set voice ID for a character
   Future<int> setCharacterVoiceId(int characterId, String voiceId) async {
     return await _dbHelper.updateCharacterVoiceId(characterId, voiceId);

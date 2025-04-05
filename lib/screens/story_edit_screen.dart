@@ -5,7 +5,7 @@ import '../database/database_helper.dart';
 import '../models/story.dart';
 import '../models/character.dart';
 import '../models/script.dart';
-import '../services/elevenlabs_service.dart';
+import '../services/elevenlabs_api_service.dart'; // Changed import
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/content_container.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,7 +21,8 @@ class StoryEditScreen extends StatefulWidget {
 
 class _StoryEditScreenState extends State<StoryEditScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final ElevenLabsService _elevenLabsService = ElevenLabsService();
+  final ElevenlabsApiService _elevenLabsService =
+      ElevenlabsApiService(); // Changed type
 
   Story? _story;
   bool _isLoading = true;
