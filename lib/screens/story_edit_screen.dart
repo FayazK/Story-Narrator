@@ -9,6 +9,8 @@ import '../services/elevenlabs_api_service.dart'; // Changed import
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/content_container.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/user_voices_provider.dart';
 
 class StoryEditScreen extends StatefulWidget {
   final int storyId;
@@ -223,10 +225,29 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Story details with characters column
-                            StoryDetailsCard(
-                              story: _story!,
-                              onStoryUpdated: _loadStory,
-                              onVoiceSelected: _handleCharacterVoiceSelection,
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final userVoicesData = ref.watch(
+                                  userVoicesProvider,
+                                );
+                                final userVoicesNotifier = ref.read(
+                                  userVoicesProvider.notifier,
+                                );
+
+                                return StoryDetailsCard(
+                                  story: _story!,
+                                  onStoryUpdated: _loadStory,
+                                  onVoiceSelected:
+                                      _handleCharacterVoiceSelection,
+                                  voices: userVoicesData.voices,
+                                  onPreviewVoice: (voiceId) {
+                                    userVoicesNotifier.playVoicePreview(
+                                      voiceId,
+                                      "Hello, this is a sample preview.", // Default preview text
+                                    );
+                                  },
+                                );
+                              },
                             ),
 
                             const SizedBox(height: 16),

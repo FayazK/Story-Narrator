@@ -1,6 +1,5 @@
 // lib/components/settings/voices/voice_card.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../utils/ui/app_colors.dart';
 import '../../../models/voice.dart';
 

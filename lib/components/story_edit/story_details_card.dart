@@ -3,17 +3,22 @@ import '../../models/story.dart';
 import '../../utils/ui/app_colors.dart';
 import '../../services/story_repair_service.dart';
 import '../../models/character.dart';
+import '../../models/voice.dart';
 
 class StoryDetailsCard extends StatelessWidget {
   final Story story;
   final VoidCallback? onStoryUpdated;
   final Function(Character, String)? onVoiceSelected;
+  final List<Voice> voices;
+  final void Function(String voiceId)? onPreviewVoice;
 
   const StoryDetailsCard({
     super.key,
     required this.story,
     this.onStoryUpdated,
     this.onVoiceSelected,
+    required this.voices,
+    this.onPreviewVoice,
   });
 
   @override
@@ -21,9 +26,7 @@ class StoryDetailsCard extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.all(8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -36,18 +39,25 @@ class StoryDetailsCard extends StatelessWidget {
                 Text(
                   'Story Details',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Row(
                   children: [
                     // Fix Story Button
-                    if (story.scenes.isEmpty || story.characters.isEmpty) // Only show if story has no scenes/characters
+                    if (story.scenes.isEmpty ||
+                        story
+                            .characters
+                            .isEmpty) // Only show if story has no scenes/characters
                       Tooltip(
-                        message: 'Attempt to fix story structure by reparsing AI response',
+                        message:
+                            'Attempt to fix story structure by reparsing AI response',
                         child: IconButton(
-                          icon: const Icon(Icons.healing, color: AppColors.accent3),
+                          icon: const Icon(
+                            Icons.healing,
+                            color: AppColors.accent3,
+                          ),
                           onPressed: () => _repairStory(context),
                           tooltip: 'Fix Story',
                         ),
@@ -92,16 +102,15 @@ class StoryDetailsCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 story.title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                ),
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ),
                           ],
                         ),
                       ),
                       // Image Prompt
-                      if (story.imagePrompt != null && story.imagePrompt!.isNotEmpty)
+                      if (story.imagePrompt != null &&
+                          story.imagePrompt!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Row(
@@ -120,9 +129,7 @@ class StoryDetailsCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   story.imagePrompt!,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                  ),
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ),
                             ],
@@ -146,9 +153,7 @@ class StoryDetailsCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 story.createdAt ?? 'N/A',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                ),
+                                style: const TextStyle(fontSize: 14),
                               ),
                             ),
                           ],
@@ -172,9 +177,7 @@ class StoryDetailsCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   story.updatedAt!,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                  ),
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ),
                             ],
@@ -190,9 +193,9 @@ class StoryDetailsCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(width: 24),
-                
+
                 // Right column - Characters
                 Expanded(
                   child: Column(
@@ -235,6 +238,8 @@ class StoryDetailsCard extends StatelessWidget {
                           return _CharacterItem(
                             character: character,
                             onVoiceSelected: onVoiceSelected,
+                            voices: voices,
+                            onPreviewVoice: onPreviewVoice,
                           );
                         }).toList(),
                     ],
@@ -304,7 +309,9 @@ class StoryDetailsCard extends StatelessWidget {
           // Show error message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Failed to repair story. Check console for details.'),
+              content: Text(
+                'Failed to repair story. Check console for details.',
+              ),
               backgroundColor: AppColors.accent4,
             ),
           );
@@ -368,19 +375,14 @@ class _StatBubble extends StatelessWidget {
 class _CharacterItem extends StatelessWidget {
   final Character character;
   final Function(Character, String)? onVoiceSelected;
-
-  // Mock-up of voice data from ElevenLabs - this would be fetched in a real implementation
-  final List<Map<String, dynamic>> _mockVoices = const [
-    {'id': 'voice1', 'name': 'Adam', 'description': 'Male, American accent'},
-    {'id': 'voice2', 'name': 'Emma', 'description': 'Female, British accent'},
-    {'id': 'voice3', 'name': 'Jason', 'description': 'Male, Australian accent'},
-    {'id': 'voice4', 'name': 'Sarah', 'description': 'Female, American accent'},
-    {'id': 'voice5', 'name': 'Michael', 'description': 'Male, British accent'},
-  ];
+  final List<Voice> voices;
+  final void Function(String voiceId)? onPreviewVoice;
 
   const _CharacterItem({
     required this.character,
     this.onVoiceSelected,
+    required this.voices,
+    this.onPreviewVoice,
   });
 
   @override
@@ -388,12 +390,7 @@ class _CharacterItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.divider,
-            width: 1,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,11 +429,13 @@ class _CharacterItem extends StatelessWidget {
                         fontSize: 15,
                       ),
                     ),
-                    if (character.gender != null || character.voiceDescription != null)
+                    if (character.gender != null ||
+                        character.voiceDescription != null)
                       Text(
                         [
                           if (character.gender != null) character.gender,
-                          if (character.voiceDescription != null) character.voiceDescription,
+                          if (character.voiceDescription != null)
+                            character.voiceDescription,
                         ].join(', '),
                         style: const TextStyle(
                           color: AppColors.textMedium,
@@ -455,17 +454,15 @@ class _CharacterItem extends StatelessWidget {
               children: [
                 const SizedBox(
                   width: 50,
-                  child: Text(
-                    'Voice:',
-                    style: TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
+                  child: Text('Voice:', style: TextStyle(fontSize: 13)),
                 ),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: AppColors.border),
@@ -478,20 +475,30 @@ class _CharacterItem extends StatelessWidget {
                     hint: const Text('Select', style: TextStyle(fontSize: 13)),
                     onChanged: (String? newValue) {
                       if (newValue != null) {
-                        onVoiceSelected!(character, newValue);
+                        onVoiceSelected?.call(character, newValue);
                       }
                     },
-                    items: _mockVoices.map<DropdownMenuItem<String>>((Map<String, dynamic> voice) {
-                      return DropdownMenuItem<String>(
-                        value: voice['id'],
-                        child: Text(
-                          '${voice['name']} - ${voice['description']}',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      );
-                    }).toList(),
+                    items:
+                        voices.map<DropdownMenuItem<String>>((Voice voice) {
+                          return DropdownMenuItem<String>(
+                            value: voice.id,
+                            child: Text(
+                              '${voice.name}${voice.description != null ? ' - ${voice.description}' : ''}',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          );
+                        }).toList(),
                   ),
                 ),
+                if (onPreviewVoice != null)
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow, size: 20),
+                    tooltip: 'Preview Voice',
+                    onPressed:
+                        character.voiceId != null
+                            ? () => onPreviewVoice!(character.voiceId!)
+                            : null,
+                  ),
               ],
             ),
         ],
