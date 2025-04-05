@@ -87,11 +87,22 @@ class UserVoicesNotifier extends StateNotifier<UserVoicesData> {
         throw Exception('API returned null user voice list');
       }
 
-      // Check library status for each voice
+      // Check library status for each API voice
       final List<Voice> enhancedVoices = [];
       for (var voice in fetchedVoices) {
         final isInLibrary = await _databaseHelper.isVoiceInLibrary(voice.id);
         enhancedVoices.add(voice.copyWith(isAddedToLibrary: isInLibrary));
+      }
+
+      // Fetch all locally saved voices
+      final localVoices = await _databaseHelper.getAllVoices();
+
+      // Add local-only voices (not present in API response)
+      for (var localVoice in localVoices) {
+        final existsInApi = enhancedVoices.any((v) => v.id == localVoice.id);
+        if (!existsInApi) {
+          enhancedVoices.add(localVoice.copyWith(isAddedToLibrary: true));
+        }
       }
 
       state = state.copyWith(
