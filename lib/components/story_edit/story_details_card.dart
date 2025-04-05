@@ -460,7 +460,7 @@ class _CharacterItem extends StatelessWidget {
                   child: DropdownButtonFormField<String>(
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 8,
                         vertical: 6,
                       ),
                       border: OutlineInputBorder(
@@ -483,7 +483,7 @@ class _CharacterItem extends StatelessWidget {
                           return DropdownMenuItem<String>(
                             value: voice.id,
                             child: Text(
-                              '${voice.name}${voice.description != null ? ' - ${voice.description}' : ''}',
+                              voice.name,
                               style: const TextStyle(fontSize: 13),
                             ),
                           );
@@ -491,13 +491,16 @@ class _CharacterItem extends StatelessWidget {
                   ),
                 ),
                 if (onPreviewVoice != null)
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow, size: 20),
-                    tooltip: 'Preview Voice',
-                    onPressed:
-                        character.voiceId != null
-                            ? () => onPreviewVoice!(character.voiceId!)
-                            : null,
+                  SizedBox(
+                    width: 36,
+                    child: IconButton(
+                      icon: const Icon(Icons.play_arrow, size: 20),
+                      tooltip: 'Preview Voice',
+                      onPressed:
+                          character.voiceId != null
+                              ? () => onPreviewVoice!(character.voiceId!)
+                              : null,
+                    ),
                   ),
               ],
             ),
