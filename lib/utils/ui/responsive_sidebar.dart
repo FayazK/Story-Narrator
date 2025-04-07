@@ -51,12 +51,8 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.auto_stories,
-                  color: AppColors.textLight,
-                  size: 28,
-                ),
-                if (!isCompact) ...[  
+                Icon(Icons.auto_stories, color: AppColors.textLight, size: 28),
+                if (!isCompact) ...[
                   const SizedBox(width: 12),
                   Text(
                     'Story Narrator',
@@ -71,7 +67,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 12),
 
           // Create Story Button
@@ -81,10 +77,10 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
           ),
 
           const SizedBox(height: 32),
-          
+
           // Navigation section
           _buildNavigationSection(isCompact),
-          
+
           // Fill the space between nav items and settings
           const Spacer(),
 
@@ -108,7 +104,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
       ),
     );
   }
-  
+
   // Create button with proper styling for desktop
   Widget _buildCreateButton(bool isCompact) {
     return ElevatedButton(
@@ -120,16 +116,14 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
           horizontal: 20,
           vertical: isCompact ? 12 : 14,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         elevation: 0,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.add, size: 18),
-          if (!isCompact) ...[  
+          if (!isCompact) ...[
             const SizedBox(width: 8),
             const Text(
               'Create Story',
@@ -140,7 +134,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
       ),
     );
   }
-  
+
   // Navigation items section
   Widget _buildNavigationSection(bool isCompact) {
     return Column(
@@ -153,14 +147,14 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
             child: Text(
               'NAVIGATE',
               style: TextStyle(
-                color: AppColors.sidebarText.withOpacity(0.5),
+                color: AppColors.sidebarText.withValues(alpha: .5),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1.2,
               ),
             ),
           ),
-          
+
         // Home / Dashboard
         _buildNavItem(
           index: 0,
@@ -171,7 +165,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
           isCompact: isCompact,
           onTap: () => widget.onNavItemSelected?.call(0),
         ),
-        
+
         // My Stories
         _buildNavItem(
           index: 1,
@@ -182,7 +176,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
           isCompact: isCompact,
           onTap: () => widget.onNavItemSelected?.call(1),
         ),
-        
+
         // Characters
         _buildNavItem(
           index: 2,
@@ -193,7 +187,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
           isCompact: isCompact,
           onTap: () => widget.onNavItemSelected?.call(2),
         ),
-        
+
         // Templates
         _buildNavItem(
           index: 3,
@@ -207,7 +201,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
       ],
     );
   }
-  
+
   // Individual navigation item
   Widget _buildNavItem({
     required int index,
@@ -220,7 +214,7 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
   }) {
     final bool isHovered = _hoveredIndex == index;
     final IconData iconToShow = isSelected ? (activeIcon ?? icon) : icon;
-    
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hoveredIndex = index),
       onExit: (_) => setState(() => _hoveredIndex = null),
@@ -234,9 +228,10 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
             vertical: isCompact ? 12 : 10,
           ),
           decoration: BoxDecoration(
-            color: isSelected 
-                ? AppColors.sidebarSelected.withOpacity(0.2)
-                : isHovered 
+            color:
+                isSelected
+                    ? AppColors.sidebarSelected.withValues(alpha: .2)
+                    : isHovered
                     ? AppColors.sidebarHover
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
@@ -245,21 +240,19 @@ class _ResponsiveSidebarState extends State<ResponsiveSidebar> {
             children: [
               Icon(
                 iconToShow,
-                color: isSelected 
-                    ? AppColors.primary
-                    : AppColors.sidebarText,
+                color: isSelected ? AppColors.primary : AppColors.sidebarText,
                 size: 20,
               ),
-              if (!isCompact) ...[  
+              if (!isCompact) ...[
                 const SizedBox(width: 12),
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected 
-                        ? AppColors.primary
-                        : AppColors.sidebarText,
+                    color:
+                        isSelected ? AppColors.primary : AppColors.sidebarText,
                     fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
               ],

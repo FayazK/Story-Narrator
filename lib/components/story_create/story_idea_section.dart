@@ -79,7 +79,7 @@ class StoryIdeaSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withOpacity(0.2),
+                color: AppColors.primaryLight.withValues(alpha: .2),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.primaryLight),
               ),
@@ -111,27 +111,45 @@ class StoryIdeaSection extends StatelessWidget {
                     children: [
                       PromptChip(
                         prompt: 'A hero with a secret power',
-                        onTap: () => storyIdeaController.text = 'A hero with a secret power',
+                        onTap:
+                            () =>
+                                storyIdeaController.text =
+                                    'A hero with a secret power',
                       ),
                       PromptChip(
                         prompt: 'Unexpected friendship',
-                        onTap: () => storyIdeaController.text = 'Unexpected friendship',
+                        onTap:
+                            () =>
+                                storyIdeaController.text =
+                                    'Unexpected friendship',
                       ),
                       PromptChip(
                         prompt: 'Lost in an unknown world',
-                        onTap: () => storyIdeaController.text = 'Lost in an unknown world',
+                        onTap:
+                            () =>
+                                storyIdeaController.text =
+                                    'Lost in an unknown world',
                       ),
                       PromptChip(
                         prompt: 'Time travel adventure',
-                        onTap: () => storyIdeaController.text = 'Time travel adventure',
+                        onTap:
+                            () =>
+                                storyIdeaController.text =
+                                    'Time travel adventure',
                       ),
                       PromptChip(
                         prompt: 'Mystery in a small town',
-                        onTap: () => storyIdeaController.text = 'Mystery in a small town',
+                        onTap:
+                            () =>
+                                storyIdeaController.text =
+                                    'Mystery in a small town',
                       ),
                       PromptChip(
                         prompt: 'Coming of age journey',
-                        onTap: () => storyIdeaController.text = 'Coming of age journey',
+                        onTap:
+                            () =>
+                                storyIdeaController.text =
+                                    'Coming of age journey',
                       ),
                     ],
                   ),

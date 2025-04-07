@@ -76,7 +76,9 @@ class SettingsSidebar extends StatelessWidget {
               onPressed: hasChanges ? onSavePressed : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withOpacity(0.4),
+                disabledBackgroundColor: AppColors.primary.withValues(
+                  alpha: .4,
+                ),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -115,7 +117,7 @@ class SettingsSidebar extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 isSelected
-                    ? AppColors.sidebarSelected.withOpacity(0.2)
+                    ? AppColors.sidebarSelected.withValues(alpha: .2)
                     : Colors.transparent,
             border: Border(
               left: BorderSide(

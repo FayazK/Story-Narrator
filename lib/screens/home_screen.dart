@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Story> _stories = [];
   bool _isLoadingStories = false;
   int _selectedNavIndex = 0;
-  
+
   @override
   void initState() {
     super.initState();
@@ -35,10 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoadingStories = true;
       });
     }
-    
+
     try {
       final stories = await _databaseHelper.getAllStories();
-      
+
       if (mounted) {
         setState(() {
           _stories = stories;
@@ -68,13 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     ).then((_) => _loadStories()); // Reload stories when returning
   }
-  
+
   @override
   Widget build(BuildContext context) {
     // Get screen dimensions for responsive design
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Define sidebar width based on screen size
     // For small screens: 60px
     // For medium screens: 15% of screen width
@@ -87,13 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       sidebarWidth = 260.0;
     }
-    
+
     return Scaffold(
       body: Container(
         // Apply a subtle background gradient to the entire screen
-        decoration: BoxDecoration(
-          color: AppColors.bgSurface,
-        ),
+        decoration: BoxDecoration(color: AppColors.bgSurface),
         child: Row(
           children: [
             // Responsive Sidebar
@@ -125,17 +123,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            
+
             // Content Area
-            Expanded(
-              child: _buildContent(),
-            ),
+            Expanded(child: _buildContent()),
           ],
         ),
       ),
     );
   }
-  
+
   // Build the main content area based on selected navigation item
   Widget _buildContent() {
     // For now, we just have the home content, but this can be expanded
@@ -153,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return _buildHomeContent();
     }
   }
-  
+
   // Home dashboard content
   Widget _buildHomeContent() {
     return Stack(
@@ -195,18 +191,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Create, narrate, and bring your stories to life',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.textLight.withOpacity(0.9),
+                          color: AppColors.textLight.withValues(alpha: .9),
                         ),
                       ),
                     ],
                   ),
                 ),
-                
+
                 // Quick actions
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: .15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -247,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        
+
         // Main content area
         Positioned(
           top: 180,
@@ -261,14 +257,14 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Recent activity section
                 _hasStories ? _buildRecentStories() : _buildEmptyState(),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Features grid section
                 _buildFeaturesSection(),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Tips and tricks section
                 _buildTipsSection(),
               ],
@@ -278,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     ).animate().fadeIn(duration: 400.ms);
   }
-  
+
   // Quick action button for header
   Widget _buildQuickActionButton({
     required IconData icon,
@@ -309,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // Empty state widget shown when no stories exist
   Widget _buildEmptyState() {
     return Container(
@@ -331,8 +327,8 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.8),
-                  AppColors.primaryDark.withOpacity(0.9),
+                  AppColors.primary.withValues(alpha: .8),
+                  AppColors.primaryDark.withValues(alpha: .9),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -347,20 +343,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          
+
           // Empty state text
           Text(
             'Create your first story',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              foreground: Paint()
-                ..shader = LinearGradient(
-                  colors: [
-                    AppColors.primaryDark,
-                    AppColors.primary,
-                  ],
-                ).createShader(const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+              foreground:
+                  Paint()
+                    ..shader = LinearGradient(
+                      colors: [AppColors.primaryDark, AppColors.primary],
+                    ).createShader(const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
             ),
           ),
           const SizedBox(height: 16),
@@ -377,9 +371,9 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // Action button
           ElevatedButton(
             onPressed: () {
@@ -395,7 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -413,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // Features grid showing app capabilities
   Widget _buildFeaturesSection() {
     return Column(
@@ -438,19 +434,22 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             _buildFeatureCard(
               title: 'AI Story Generation',
-              description: 'Use Gemini AI to generate compelling story ideas and scenes',
+              description:
+                  'Use Gemini AI to generate compelling story ideas and scenes',
               icon: Icons.smart_toy_outlined,
               color: Colors.blue,
             ),
             _buildFeatureCard(
               title: 'Voice Narration',
-              description: 'Convert your stories to audio using ElevenLabs text-to-speech',
+              description:
+                  'Convert your stories to audio using ElevenLabs text-to-speech',
               icon: Icons.record_voice_over,
               color: Colors.orange,
             ),
             _buildFeatureCard(
               title: 'Character Development',
-              description: 'Create rich, detailed characters with diverse personalities',
+              description:
+                  'Create rich, detailed characters with diverse personalities',
               icon: Icons.people_outline,
               color: Colors.green,
             ),
@@ -462,13 +461,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             _buildFeatureCard(
               title: 'Story Templates',
-              description: 'Use templates for various genres and story structures',
+              description:
+                  'Use templates for various genres and story structures',
               icon: Icons.category_outlined,
               color: Colors.indigo,
             ),
             _buildFeatureCard(
               title: 'Export & Share',
-              description: 'Export your stories in various formats for easy sharing',
+              description:
+                  'Export your stories in various formats for easy sharing',
               icon: Icons.ios_share_outlined,
               color: Colors.teal,
             ),
@@ -477,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-  
+
   // Individual feature card
   Widget _buildFeatureCard({
     required String title,
@@ -491,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(12),
         boxShadow: AppColors.subtleShadow,
-        border: Border.all(color: AppColors.border.withOpacity(0.8)),
+        border: Border.all(color: AppColors.border.withValues(alpha: .8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: .1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -532,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // Tips and tricks section
   Widget _buildTipsSection() {
     return Container(
@@ -541,14 +542,14 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.05),
-            AppColors.primaryLight.withOpacity(0.15),
+            AppColors.primary.withValues(alpha: .05),
+            AppColors.primaryLight.withValues(alpha: .15),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: .2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -577,14 +578,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildTipItem(
             'Preview your narration with different voices before finalizing',
           ),
-          _buildTipItem(
-            'Regularly save your work using the auto-save feature',
-          ),
+          _buildTipItem('Regularly save your work using the auto-save feature'),
         ],
       ),
     );
   }
-  
+
   // Individual tip item
   Widget _buildTipItem(String tip) {
     return Padding(
@@ -592,11 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            color: AppColors.primary,
-            size: 18,
-          ),
+          Icon(Icons.check_circle_outline, color: AppColors.primary, size: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -612,11 +607,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // Recent stories grid (shown when the user has created stories)
   Widget _buildRecentStories() {
-    final recentStories = _stories.take(3).toList(); // Show up to 3 recent stories
-    
+    final recentStories =
+        _stories.take(3).toList(); // Show up to 3 recent stories
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -646,15 +642,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       _selectedNavIndex = 1; // Switch to My Stories tab
                     });
                   },
-                  icon: Icon(Icons.view_list, size: 18, color: AppColors.primary),
-                  label: Text('View All', style: TextStyle(color: AppColors.primary)),
+                  icon: Icon(
+                    Icons.view_list,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
+                  label: Text(
+                    'View All',
+                    style: TextStyle(color: AppColors.primary),
+                  ),
                 ),
               ],
             ),
           ),
-          
+
           const Divider(),
-          
+
           // Recent stories list
           for (final story in recentStories)
             ListTile(
@@ -662,7 +665,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withOpacity(0.3),
+                  color: AppColors.primaryLight.withValues(alpha: .3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.book, color: AppColors.primary),
@@ -671,13 +674,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 story.title,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: story.createdAt != null
-                ? Text('Created: ${story.createdAt}')
-                : null,
+              subtitle:
+                  story.createdAt != null
+                      ? Text('Created: ${story.createdAt}')
+                      : null,
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _handleStorySelected(story.id!),
             ),
-            
+
           // View all button at the bottom
           Padding(
             padding: const EdgeInsets.all(16),
@@ -689,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: .1),
                   foregroundColor: AppColors.primary,
                 ),
                 child: const Text('View All Stories'),
@@ -700,7 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // My Stories content section
   Widget _buildMyStoriesContent() {
     return ContentContainer(
@@ -728,7 +732,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       MaterialPageRoute(
                         builder: (context) => const CreateStoryScreen(),
                       ),
-                    ).then((_) => _loadStories()); // Reload stories when returning
+                    ).then(
+                      (_) => _loadStories(),
+                    ); // Reload stories when returning
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -740,21 +746,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          
+
           // Story list
           Expanded(
-            child: _isLoadingStories
-                ? const Center(child: CircularProgressIndicator())
-                : StoryList(
-                    stories: _stories,
-                    onStorySelected: _handleStorySelected,
-                  ),
+            child:
+                _isLoadingStories
+                    ? const Center(child: CircularProgressIndicator())
+                    : StoryList(
+                      stories: _stories,
+                      onStorySelected: _handleStorySelected,
+                    ),
           ),
         ],
       ),
     ).animate().fadeIn(duration: 400.ms);
   }
-  
+
   Widget _buildCharactersContent() {
     return Center(
       child: Text(
@@ -763,7 +770,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildTemplatesContent() {
     return Center(
       child: Text(
@@ -772,7 +779,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // Check if there are any stories
   bool get _hasStories => _stories.isNotEmpty;
 }

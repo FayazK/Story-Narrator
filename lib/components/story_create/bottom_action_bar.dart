@@ -19,7 +19,7 @@ class BottomActionBar extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: .05),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -28,10 +28,7 @@ class BottomActionBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: onCancel,
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: onCancel, child: const Text('Cancel')),
           const SizedBox(width: 16),
           ElevatedButton(
             onPressed: onGenerate,

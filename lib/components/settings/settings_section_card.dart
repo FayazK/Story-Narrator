@@ -34,10 +34,7 @@ class SettingsSectionCard extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(
-                  color: AppColors.border,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: AppColors.border, width: 1),
               ),
             ),
             child: Row(
@@ -45,14 +42,10 @@ class SettingsSectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
+                    color: iconColor.withValues(alpha: .1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 24,
-                  ),
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -81,12 +74,9 @@ class SettingsSectionCard extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Content
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: content,
-          ),
+          Padding(padding: const EdgeInsets.all(20), child: content),
         ],
       ),
     );

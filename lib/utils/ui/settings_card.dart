@@ -9,7 +9,7 @@ class SettingsCard extends StatelessWidget {
   final Widget child;
   final bool isExpanded;
   final Widget? trailing;
-  
+
   const SettingsCard({
     super.key,
     required this.title,
@@ -29,7 +29,7 @@ class SettingsCard extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: .05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -50,20 +50,16 @@ class SettingsCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.primary.withOpacity(0.7),
-                    AppColors.primaryDark.withOpacity(0.8),
+                    AppColors.primary.withValues(alpha: .7),
+                    AppColors.primaryDark.withValues(alpha: .8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 16),
-            
+
             // Title and subtitle
             Expanded(
               child: Column(
@@ -88,10 +84,9 @@ class SettingsCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Optional trailing widget
-            if (trailing != null)
-              trailing!,
+            if (trailing != null) trailing!,
           ],
         ),
         children: [child],

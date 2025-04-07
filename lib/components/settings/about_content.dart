@@ -18,8 +18,8 @@ class AboutContent extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.primary.withOpacity(0.8),
-                    AppColors.primaryDark.withOpacity(0.9),
+                    AppColors.primary.withValues(alpha: .8),
+                    AppColors.primaryDark.withValues(alpha: .9),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -45,10 +45,7 @@ class AboutContent extends StatelessWidget {
             const SizedBox(height: 8),
             const Text(
               'Version 1.0.0',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 32),
             Container(
@@ -82,19 +79,12 @@ class AboutContent extends StatelessWidget {
                   const Text(
                     'Story Narrator is a desktop application for creating and narrating stories using AI. '
                     'Create rich narratives, develop characters, and bring your stories to life with voice narration.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      height: 1.5,
-                    ),
+                    style: TextStyle(fontSize: 15, height: 1.5),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
-                      Icon(
-                        Icons.code,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
+                      Icon(Icons.code, color: AppColors.primary, size: 24),
                       const SizedBox(width: 16),
                       Text(
                         'Technology Stack',
@@ -119,7 +109,7 @@ class AboutContent extends StatelessWidget {
       ),
     );
   }
-  
+
   // Technology item for about page
   Widget _buildTechItem(String title, String description) {
     return Padding(
@@ -150,10 +140,7 @@ class AboutContent extends StatelessWidget {
                 ),
                 Text(
                   description,
-                  style: TextStyle(
-                    color: AppColors.textMedium,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppColors.textMedium, fontSize: 14),
                 ),
               ],
             ),

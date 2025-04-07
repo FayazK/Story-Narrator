@@ -13,7 +13,7 @@ class ApiConfigContent extends StatelessWidget {
   final bool isGeminiKeyConfigured;
   final ValueChanged<String> onGeminiKeyChanged;
   final VoidCallback onValidateGeminiKey;
-  
+
   // ElevenLabs API properties
   final String elevenlabsApiKey;
   final bool isElevenlabsApiKeyValid;
@@ -34,7 +34,7 @@ class ApiConfigContent extends StatelessWidget {
     required this.isGeminiKeyConfigured,
     required this.onGeminiKeyChanged,
     required this.onValidateGeminiKey,
-    
+
     // ElevenLabs API properties
     required this.elevenlabsApiKey,
     required this.isElevenlabsApiKeyValid,
@@ -65,17 +65,15 @@ class ApiConfigContent extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Configure your API keys for AI generation and text-to-speech services.',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textMedium,
-            ),
+            style: TextStyle(fontSize: 16, color: AppColors.textMedium),
           ),
           const SizedBox(height: 32),
-          
+
           // Gemini API Settings
           SettingsSectionCard(
             title: 'Google Gemini API',
-            description: 'Power your story generation with Google\'s Gemini AI model.',
+            description:
+                'Power your story generation with Google\'s Gemini AI model.',
             icon: Icons.auto_awesome,
             iconColor: Colors.blue,
             content: Column(
@@ -87,9 +85,11 @@ class ApiConfigContent extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: .3),
+                      ),
                     ),
                     child: const Row(
                       children: [
@@ -106,7 +106,7 @@ class ApiConfigContent extends StatelessWidget {
                     ),
                   ),
                 ],
-                
+
                 // API Key input
                 ApiKeyInput(
                   label: 'Gemini API Key',
@@ -118,17 +118,14 @@ class ApiConfigContent extends StatelessWidget {
                   onChanged: onGeminiKeyChanged,
                   onValidate: onValidateGeminiKey,
                 ),
-                
+
                 // Help text
                 const SizedBox(height: 20),
                 Text(
                   'Get your Gemini API key from Google AI Studio at ai.google.dev',
-                  style: TextStyle(
-                    color: AppColors.textMedium,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppColors.textMedium, fontSize: 14),
                 ),
-                
+
                 // Model selection (future feature)
                 const SizedBox(height: 32),
                 Text(
@@ -140,7 +137,7 @@ class ApiConfigContent extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Disabled model selector (future feature)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -179,13 +176,14 @@ class ApiConfigContent extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // ElevenLabs API Settings
           SettingsSectionCard(
             title: 'ElevenLabs API',
-            description: 'Enable text-to-speech features with ElevenLabs voice technology.',
+            description:
+                'Enable text-to-speech features with ElevenLabs voice technology.',
             icon: Icons.record_voice_over,
             iconColor: Colors.orange,
             content: Column(
@@ -197,9 +195,11 @@ class ApiConfigContent extends StatelessWidget {
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: .3),
+                      ),
                     ),
                     child: const Row(
                       children: [
@@ -216,7 +216,7 @@ class ApiConfigContent extends StatelessWidget {
                     ),
                   ),
                 ],
-                
+
                 // API Key input
                 ApiKeyInput(
                   label: 'ElevenLabs API Key',
@@ -228,17 +228,14 @@ class ApiConfigContent extends StatelessWidget {
                   onChanged: onElevenlabsKeyChanged,
                   onValidate: onValidateElevenlabsApiKey,
                 ),
-                
+
                 // Help text
                 const SizedBox(height: 20),
                 Text(
                   'Get your ElevenLabs API key from elevenlabs.io/account',
-                  style: TextStyle(
-                    color: AppColors.textMedium,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppColors.textMedium, fontSize: 14),
                 ),
-                
+
                 // ElevenLabs account info (if available)
                 if (elevenlabsUserInfo != null) ...[
                   const SizedBox(height: 32),
@@ -251,146 +248,129 @@ class ApiConfigContent extends StatelessWidget {
       ),
     );
   }
-  
+
   // Build the ElevenLabs account info card
   Widget _buildElevenlabsInfoCard(Map<String, dynamic> userInfo) {
     final subscription = userInfo['subscription'] as Map<String, dynamic>?;
     final characterCount = userInfo['subscription']['character_count'] ?? 0;
     final characterLimit = userInfo['subscription']['character_limit'] ?? 0;
-    
-    final usagePercentage = characterLimit > 0 
-        ? (characterCount / characterLimit * 100).clamp(0, 100)
-        : 0.0;
-    
+
+    final usagePercentage =
+        characterLimit > 0
+            ? (characterCount / characterLimit * 100).clamp(0, 100)
+            : 0.0;
+
     final tier = subscription?['tier'] ?? 'Free';
-    
+
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade50,
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.verified_user,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Account Information',
-                style: TextStyle(
-                  color: AppColors.textDark,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey.shade50,
+            border: Border.all(color: Colors.grey.shade200, width: 1),
           ),
-          const SizedBox(height: 16),
-          
-          // Subscription tier
-          Row(
-            children: [
-              Icon(
-                Icons.card_membership,
-                color: AppColors.textMedium,
-                size: 16,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Tier: ',
-                style: TextStyle(
-                  color: AppColors.textMedium,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                tier,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          
-          // Character usage
-          Row(
-            children: [
-              Icon(
-                Icons.text_fields,
-                color: AppColors.textMedium,
-                size: 16,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Characters: ',
-                style: TextStyle(
-                  color: AppColors.textMedium,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                '$characterCount / $characterLimit',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Usage progress bar
-          Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Usage: ${usagePercentage.toStringAsFixed(1)}%',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: usagePercentage / 100,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    usagePercentage > 90 
-                        ? Colors.red 
-                        : usagePercentage > 70 
-                            ? Colors.orange 
-                            : AppColors.primary,
+              Row(
+                children: [
+                  Icon(Icons.verified_user, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Account Information',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                  minHeight: 8,
-                ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Subscription tier
+              Row(
+                children: [
+                  Icon(
+                    Icons.card_membership,
+                    color: AppColors.textMedium,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Tier: ',
+                    style: TextStyle(color: AppColors.textMedium, fontSize: 14),
+                  ),
+                  Text(
+                    tier,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Character usage
+              Row(
+                children: [
+                  Icon(
+                    Icons.text_fields,
+                    color: AppColors.textMedium,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Characters: ',
+                    style: TextStyle(color: AppColors.textMedium, fontSize: 14),
+                  ),
+                  Text(
+                    '$characterCount / $characterLimit',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Usage progress bar
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Usage: ${usagePercentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: LinearProgressIndicator(
+                      value: usagePercentage / 100,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        usagePercentage > 90
+                            ? Colors.red
+                            : usagePercentage > 70
+                            ? Colors.orange
+                            : AppColors.primary,
+                      ),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(
-      duration: 300.ms,
-      delay: 200.ms,
-    ).moveY(
-      begin: 10,
-      end: 0,
-      curve: Curves.easeOutCubic,
-      duration: 400.ms,
-    );
+        )
+        .animate()
+        .fadeIn(duration: 300.ms, delay: 200.ms)
+        .moveY(begin: 10, end: 0, curve: Curves.easeOutCubic, duration: 400.ms);
   }
 }

@@ -18,16 +18,23 @@ class ScriptItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool hasVoice = script.voiceoverPath != null && script.voiceoverPath!.isNotEmpty;
+    final bool hasVoice =
+        script.voiceoverPath != null && script.voiceoverPath!.isNotEmpty;
     final bool isNarrator = character == null;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isNarrator ? AppColors.sidebarBg.withOpacity(0.05) : Colors.white,
+        color:
+            isNarrator
+                ? AppColors.sidebarBg.withValues(alpha: .05)
+                : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isNarrator ? AppColors.primary.withOpacity(0.2) : AppColors.border,
+          color:
+              isNarrator
+                  ? AppColors.primary.withValues(alpha: .2)
+                  : AppColors.border,
         ),
         boxShadow: AppColors.subtleShadow,
       ),
@@ -45,7 +52,10 @@ class ScriptItem extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: isNarrator ? AppColors.primary.withOpacity(0.2) : AppColors.primaryLight,
+                      color:
+                          isNarrator
+                              ? AppColors.primary.withValues(alpha: .2)
+                              : AppColors.primaryLight,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Center(
@@ -63,7 +73,8 @@ class ScriptItem extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: isNarrator ? AppColors.primary : AppColors.textDark,
+                      color:
+                          isNarrator ? AppColors.primary : AppColors.textDark,
                     ),
                   ),
                 ],
@@ -80,7 +91,8 @@ class ScriptItem extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      script.language.substring(0, 1).toUpperCase() + script.language.substring(1),
+                      script.language.substring(0, 1).toUpperCase() +
+                          script.language.substring(1),
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textMedium,
@@ -103,20 +115,17 @@ class ScriptItem extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Script text
           Text(
             script.scriptText,
-            style: const TextStyle(
-              fontSize: 15,
-              height: 1.4,
-            ),
+            style: const TextStyle(fontSize: 15, height: 1.4),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Audio section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -124,9 +133,7 @@ class ScriptItem extends StatelessWidget {
               // Audio player if voice exists
               if (hasVoice)
                 Expanded(
-                  child: _AudioPlayer(
-                    voiceoverPath: script.voiceoverPath!,
-                  ),
+                  child: _AudioPlayer(voiceoverPath: script.voiceoverPath!),
                 )
               else
                 const Text(
@@ -137,7 +144,7 @@ class ScriptItem extends StatelessWidget {
                     fontSize: 13,
                   ),
                 ),
-                
+
               // Generate/regenerate button
               _VoiceGenerationButton(
                 hasVoice: hasVoice,
@@ -154,9 +161,7 @@ class ScriptItem extends StatelessWidget {
 class _AudioPlayer extends StatelessWidget {
   final String voiceoverPath;
 
-  const _AudioPlayer({
-    required this.voiceoverPath,
-  });
+  const _AudioPlayer({required this.voiceoverPath});
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +198,7 @@ class _AudioPlayer extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              
+
               // Audio file info
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -208,10 +213,7 @@ class _AudioPlayer extends StatelessWidget {
                   ),
                   const Text(
                     '00:00 / 01:30', // Mock duration
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textMedium,
-                    ),
+                    style: TextStyle(fontSize: 11, color: AppColors.textMedium),
                   ),
                 ],
               ),
@@ -241,10 +243,7 @@ class _VoiceGenerationButton extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-      icon: Icon(
-        hasVoice ? Icons.refresh : Icons.record_voice_over,
-        size: 16,
-      ),
+      icon: Icon(hasVoice ? Icons.refresh : Icons.record_voice_over, size: 16),
       label: Text(
         hasVoice ? 'Regenerate' : 'Generate Voice',
         style: const TextStyle(fontSize: 13),

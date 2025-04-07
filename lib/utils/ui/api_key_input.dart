@@ -12,7 +12,7 @@ class ApiKeyInput extends StatefulWidget {
   final bool isValid;
   final Function(String) onChanged;
   final VoidCallback? onValidate;
-  
+
   const ApiKeyInput({
     super.key,
     required this.label,
@@ -33,16 +33,16 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
   bool _obscureText = true;
   late TextEditingController _controller;
   final FocusNode _focusNode = FocusNode();
-  
+
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
-    
+
     // Add focus listener to validate on focus change
     _focusNode.addListener(_onFocusChange);
   }
-  
+
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChange);
@@ -50,21 +50,22 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
     _controller.dispose();
     super.dispose();
   }
-  
+
   void _onFocusChange() {
     // Validate API key when focus is lost and text is not empty
-    if (!_focusNode.hasFocus && 
-        _controller.text.isNotEmpty && 
+    if (!_focusNode.hasFocus &&
+        _controller.text.isNotEmpty &&
         widget.onValidate != null &&
         !widget.isValid) {
       widget.onValidate!();
     }
   }
-  
+
   @override
   void didUpdateWidget(ApiKeyInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.initialValue != oldWidget.initialValue && widget.initialValue != _controller.text) {
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != _controller.text) {
       _controller.text = widget.initialValue ?? '';
     }
   }
@@ -84,14 +85,14 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
           ),
         ),
         const SizedBox(height: 8),
-        
+
         // Input field with validation
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: .05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -151,7 +152,7 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
                         });
                       },
                     ),
-                    
+
                     // Validation status indicator or button
                     if (widget.isLoading)
                       const SizedBox(
@@ -159,28 +160,20 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
                         height: 24,
                         child: Padding(
                           padding: EdgeInsets.all(4.0),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
                         ),
                       )
                     else if (widget.isValid)
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                      ).animate().scale(
-                        duration: 300.ms,
-                        curve: Curves.elasticOut,
-                      )
+                      const Icon(Icons.check_circle, color: Colors.green)
+                          .animate()
+                          .scale(duration: 300.ms, curve: Curves.elasticOut)
                     else if (widget.errorText != null)
-                      const Icon(
-                        Icons.error,
-                        color: Colors.red,
-                      )
+                      const Icon(Icons.error, color: Colors.red)
                     else if (widget.onValidate != null)
                       // Explicit validation button
                       ElevatedButton(
-                        onPressed: _controller.text.isEmpty ? null : widget.onValidate,
+                        onPressed:
+                            _controller.text.isEmpty ? null : widget.onValidate,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -202,7 +195,7 @@ class _ApiKeyInputState extends State<ApiKeyInput> {
       ],
     );
   }
-  
+
   Color _getInputBorderColor() {
     if (widget.isValid) {
       return Colors.green;

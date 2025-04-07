@@ -5,11 +5,7 @@ class PromptChip extends StatelessWidget {
   final String prompt;
   final VoidCallback onTap;
 
-  const PromptChip({
-    super.key,
-    required this.prompt,
-    required this.onTap,
-  });
+  const PromptChip({super.key, required this.prompt, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +14,9 @@ class PromptChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: .1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: .3)),
         ),
         child: Text(
           prompt,

@@ -27,7 +27,7 @@ class VoiceCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: .05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -203,9 +203,12 @@ class VoiceCard extends StatelessWidget {
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: headerColor.withOpacity(0.1),
+        color: headerColor.withValues(alpha: .1),
         border: Border(
-          bottom: BorderSide(color: headerColor.withOpacity(0.2), width: 1),
+          bottom: BorderSide(
+            color: headerColor.withValues(alpha: .2),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -215,7 +218,7 @@ class VoiceCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: headerColor.withOpacity(0.2),
+              color: headerColor.withValues(alpha: .2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

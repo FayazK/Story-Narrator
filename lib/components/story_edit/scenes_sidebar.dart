@@ -19,9 +19,7 @@ class ScenesSidebar extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.all(8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: 200,
         padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -42,7 +40,7 @@ class ScenesSidebar extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Divider(),
-            
+
             // Scene List
             Expanded(
               child: ListView.builder(
@@ -51,7 +49,7 @@ class ScenesSidebar extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final scene = scenes[index];
                   final isSelected = index == selectedSceneIndex;
-                  
+
                   return _SceneListItem(
                     scene: scene,
                     isSelected: isSelected,
@@ -82,16 +80,24 @@ class _SceneListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasNarration = scene.narration != null;
     final characterCount = scene.characterScripts.length;
-    final audioCount = scene.scripts
-        .where((script) => script.voiceoverPath != null && script.voiceoverPath!.isNotEmpty)
-        .length;
-    
+    final audioCount =
+        scene.scripts
+            .where(
+              (script) =>
+                  script.voiceoverPath != null &&
+                  script.voiceoverPath!.isNotEmpty,
+            )
+            .length;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight.withOpacity(0.3) : Colors.transparent,
+          color:
+              isSelected
+                  ? AppColors.primaryLight.withValues(alpha: .3)
+                  : Colors.transparent,
           border: Border(
             left: BorderSide(
               color: isSelected ? AppColors.primary : Colors.transparent,
@@ -112,7 +118,7 @@ class _SceneListItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            
+
             // Scene metadata indicators
             Row(
               children: [
@@ -167,11 +173,7 @@ class _StatusIndicator extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 14,
-              color: color,
-            ),
+            Icon(icon, size: 14, color: color),
             if (count != null)
               Padding(
                 padding: const EdgeInsets.only(left: 2.0),

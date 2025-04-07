@@ -16,7 +16,8 @@ class ShimmerButton extends StatefulWidget {
   State<ShimmerButton> createState() => _ShimmerButtonState();
 }
 
-class _ShimmerButtonState extends State<ShimmerButton> with SingleTickerProviderStateMixin {
+class _ShimmerButtonState extends State<ShimmerButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _isHovered = false;
 
@@ -47,22 +48,26 @@ class _ShimmerButtonState extends State<ShimmerButton> with SingleTickerProvider
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Color.lerp(
-                  Colors.grey.shade300,
-                  Colors.grey.shade500,
-                  (_controller.value - 0.5).abs() * 2,
-                )!,
+                color:
+                    Color.lerp(
+                      Colors.grey.shade300,
+                      Colors.grey.shade500,
+                      (_controller.value - 0.5).abs() * 2,
+                    )!,
                 width: 1.0,
               ),
-              color: _isHovered ? AppColors.primary.withOpacity(0.05) : Colors.white,
+              color:
+                  _isHovered
+                      ? AppColors.primary.withValues(alpha: .05)
+                      : Colors.white,
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: widget.onPressed,
                 borderRadius: BorderRadius.circular(11),
-                splashColor: AppColors.primary.withOpacity(0.1),
-                highlightColor: AppColors.primary.withOpacity(0.05),
+                splashColor: AppColors.primary.withValues(alpha: .1),
+                highlightColor: AppColors.primary.withValues(alpha: .05),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 16.0,
