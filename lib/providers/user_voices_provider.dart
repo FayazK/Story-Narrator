@@ -154,10 +154,6 @@ class UserVoicesNotifier extends StateNotifier<UserVoicesData> {
         urlToPlay = generatedUrl;
       }
 
-      if (urlToPlay == null) {
-        throw Exception('Audio URL is null');
-      }
-
       await state.audioPlayer.setUrl(urlToPlay);
       await state.audioPlayer.play();
 

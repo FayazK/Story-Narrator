@@ -241,7 +241,7 @@ class StoryDetailsCard extends StatelessWidget {
                             voices: voices,
                             onPreviewVoice: onPreviewVoice,
                           );
-                        }).toList(),
+                        }),
                     ],
                   ),
                 ),
