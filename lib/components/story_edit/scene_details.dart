@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/story_scene.dart';
 import '../../models/script.dart';
 import '../../models/character.dart';
@@ -22,9 +23,7 @@ class SceneDetails extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.all(8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -37,9 +36,9 @@ class SceneDetails extends StatelessWidget {
                 Text(
                   'Scene ${scene.sceneNumber} Details',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.edit, color: AppColors.primary),
@@ -51,21 +50,21 @@ class SceneDetails extends StatelessWidget {
               ],
             ),
             const Divider(),
-            
+
             // Scene metadata (if available)
-            if (scene.characterActions != null || 
-                scene.backgroundImage != null || 
-                scene.backgroundSound != null || 
+            if (scene.characterActions != null ||
+                scene.backgroundImage != null ||
+                scene.backgroundSound != null ||
                 scene.soundEffects != null)
               _buildSceneMetadata(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Narration section (if available)
             if (scene.narration != null) _buildNarrationSection(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Character scripts section
             _buildCharacterScriptsSection(),
           ],
@@ -85,19 +84,22 @@ class SceneDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (scene.characterActions != null && scene.characterActions!.isNotEmpty)
+          if (scene.characterActions != null &&
+              scene.characterActions!.isNotEmpty)
             _MetadataItem(
               icon: Icons.people,
               label: 'Character Actions',
               value: scene.characterActions!,
             ),
-          if (scene.backgroundImage != null && scene.backgroundImage!.isNotEmpty)
+          if (scene.backgroundImage != null &&
+              scene.backgroundImage!.isNotEmpty)
             _MetadataItem(
               icon: Icons.image,
               label: 'Background Image',
               value: scene.backgroundImage!,
             ),
-          if (scene.backgroundSound != null && scene.backgroundSound!.isNotEmpty)
+          if (scene.backgroundSound != null &&
+              scene.backgroundSound!.isNotEmpty)
             _MetadataItem(
               icon: Icons.music_note,
               label: 'Background Sound',
@@ -140,7 +142,7 @@ class SceneDetails extends StatelessWidget {
 
   Widget _buildCharacterScriptsSection() {
     final characterScripts = scene.characterScripts;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,25 +170,27 @@ class SceneDetails extends StatelessWidget {
           )
         else
           Column(
-            children: characterScripts.map((script) {
-              // Find the character for this script
-              final character = characters.firstWhere(
-                (char) => char.id == script.characterId,
-                orElse: () => Character(
-                  storyId: scene.storyId,
-                  name: 'Unknown Character',
-                ),
-              );
-              
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: ScriptItem(
-                  script: script,
-                  character: character,
-                  onGenerateVoice: onGenerateVoice,
-                ),
-              );
-            }).toList(),
+            children:
+                characterScripts.map((script) {
+                  // Find the character for this script
+                  final character = characters.firstWhere(
+                    (char) => char.id == script.characterId,
+                    orElse:
+                        () => Character(
+                          storyId: scene.storyId,
+                          name: 'Unknown Character',
+                        ),
+                  );
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: ScriptItem(
+                      script: script,
+                      character: character,
+                      onGenerateVoice: onGenerateVoice,
+                    ),
+                  );
+                }).toList(),
           ),
       ],
     );
@@ -211,11 +215,7 @@ class _MetadataItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 18,
-            color: AppColors.primary,
-          ),
+          Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 8),
           SizedBox(
             width: 120,
@@ -228,11 +228,17 @@ class _MetadataItem extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-              ),
+            child: GestureDetector(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: value));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('$label copied to clipboard'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
+              child: Text(value, style: const TextStyle(fontSize: 14)),
             ),
           ),
         ],

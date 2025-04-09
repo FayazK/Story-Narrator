@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/story.dart';
 import '../../utils/ui/app_colors.dart';
 import '../../services/story_repair_service.dart';
@@ -127,9 +128,24 @@ class StoryDetailsCard extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                child: Text(
-                                  story.imagePrompt!,
-                                  style: const TextStyle(fontSize: 14),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Clipboard.setData(
+                                      ClipboardData(text: story.imagePrompt!),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Image prompt copied to clipboard',
+                                        ),
+                                        duration: Duration(seconds: 1),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    story.imagePrompt!,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
                                 ),
                               ),
                             ],
@@ -431,15 +447,33 @@ class _CharacterItem extends StatelessWidget {
                     ),
                     if (character.gender != null ||
                         character.voiceDescription != null)
-                      Text(
-                        [
-                          if (character.gender != null) character.gender,
-                          if (character.voiceDescription != null)
-                            character.voiceDescription,
-                        ].join(', '),
-                        style: const TextStyle(
-                          color: AppColors.textMedium,
-                          fontSize: 12,
+                      GestureDetector(
+                        onTap: () {
+                          final description = [
+                            if (character.gender != null) character.gender,
+                            if (character.voiceDescription != null)
+                              character.voiceDescription,
+                          ].join(', ');
+                          Clipboard.setData(ClipboardData(text: description));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Character description copied to clipboard',
+                              ),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          [
+                            if (character.gender != null) character.gender,
+                            if (character.voiceDescription != null)
+                              character.voiceDescription,
+                          ].join(', '),
+                          style: const TextStyle(
+                            color: AppColors.textMedium,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                   ],
