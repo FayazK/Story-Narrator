@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'dart:io';
 import '../../models/script.dart';
 import '../../models/character.dart';
@@ -158,23 +159,91 @@ class ScriptItem extends StatelessWidget {
   }
 }
 
-class _AudioPlayer extends StatelessWidget {
+class _AudioPlayer extends StatefulWidget {
   final String voiceoverPath;
 
   const _AudioPlayer({required this.voiceoverPath});
 
   @override
+  State<_AudioPlayer> createState() => _AudioPlayerState();
+}
+
+class _AudioPlayerState extends State<_AudioPlayer> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+  double _progress = 0.0;
+  Duration? _duration;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _initAudioPlayer();
+  }
+
+  Future<void> _initAudioPlayer() async {
+    try {
+      await _audioPlayer.setFilePath(widget.voiceoverPath);
+      _audioPlayer.durationStream.listen((duration) {
+        if (duration != null) {
+          setState(() => _duration = duration);
+        }
+      });
+      _audioPlayer.positionStream.listen((position) {
+        if (_duration != null && _duration!.inMilliseconds > 0) {
+          setState(() {
+            _progress = position.inMilliseconds / _duration!.inMilliseconds;
+          });
+        }
+      });
+      _audioPlayer.playerStateStream.listen((state) {
+        setState(() {
+          _isPlaying = state.playing;
+        });
+      });
+    } catch (e) {
+      debugPrint('Error initializing audio player: $e');
+    }
+  }
+
+  Future<void> _togglePlayback() async {
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        await _audioPlayer.play();
+      }
+    } catch (e) {
+      debugPrint('Error toggling playback: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to play audio')));
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return '00:00';
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Simple audio player UI mockup
-    // In a real implementation, you would integrate with a proper audio player
     return Row(
       children: [
         IconButton(
-          icon: const Icon(Icons.play_circle_filled),
+          icon: Icon(
+            _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+          ),
           color: AppColors.primary,
-          onPressed: () {
-            // TODO: Implement audio playback
-          },
+          onPressed: _togglePlayback,
         ),
         Expanded(
           child: Column(
@@ -188,7 +257,7 @@ class _AudioPlayer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: FractionallySizedBox(
-                  widthFactor: 0.3, // Mock progress
+                  widthFactor: _progress,
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppColors.primary,
@@ -204,16 +273,19 @@ class _AudioPlayer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    File(voiceoverPath).uri.pathSegments.last,
+                    File(widget.voiceoverPath).uri.pathSegments.last,
                     style: const TextStyle(
                       fontSize: 11,
                       color: AppColors.textMedium,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const Text(
-                    '00:00 / 01:30', // Mock duration
-                    style: TextStyle(fontSize: 11, color: AppColors.textMedium),
+                  Text(
+                    '${_formatDuration(_audioPlayer.position)} / ${_formatDuration(_duration)}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textMedium,
+                    ),
                   ),
                 ],
               ),
