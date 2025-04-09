@@ -128,24 +128,59 @@ class StoryDetailsCard extends StatelessWidget {
                                 ),
                               ),
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Clipboard.setData(
-                                      ClipboardData(text: story.imagePrompt!),
-                                    );
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Image prompt copied to clipboard',
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Clipboard.setData(
+                                            ClipboardData(
+                                              text: story.imagePrompt!,
+                                            ),
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Image prompt copied to clipboard',
+                                              ),
+                                              duration: Duration(seconds: 1),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          story.imagePrompt!,
+                                          style: const TextStyle(fontSize: 14),
                                         ),
-                                        duration: Duration(seconds: 1),
                                       ),
-                                    );
-                                  },
-                                  child: Text(
-                                    story.imagePrompt!,
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Clipboard.setData(
+                                          ClipboardData(
+                                            text: story.imagePrompt!,
+                                          ),
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Image prompt copied to clipboard',
+                                            ),
+                                            duration: Duration(seconds: 1),
+                                          ),
+                                        );
+                                      },
+                                      child: const Icon(
+                                        Icons.content_copy,
+                                        size: 16,
+                                        color: AppColors.textMedium,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -447,34 +482,70 @@ class _CharacterItem extends StatelessWidget {
                     ),
                     if (character.gender != null ||
                         character.voiceDescription != null)
-                      GestureDetector(
-                        onTap: () {
-                          final description = [
-                            if (character.gender != null) character.gender,
-                            if (character.voiceDescription != null)
-                              character.voiceDescription,
-                          ].join(', ');
-                          Clipboard.setData(ClipboardData(text: description));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Character description copied to clipboard',
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                final description = [
+                                  if (character.gender != null)
+                                    character.gender,
+                                  if (character.voiceDescription != null)
+                                    character.voiceDescription,
+                                ].join(', ');
+                                Clipboard.setData(
+                                  ClipboardData(text: description),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Character description copied to clipboard',
+                                    ),
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                [
+                                  if (character.gender != null)
+                                    character.gender,
+                                  if (character.voiceDescription != null)
+                                    character.voiceDescription,
+                                ].join(', '),
+                                style: const TextStyle(
+                                  color: AppColors.textMedium,
+                                  fontSize: 12,
+                                ),
                               ),
-                              duration: Duration(seconds: 1),
                             ),
-                          );
-                        },
-                        child: Text(
-                          [
-                            if (character.gender != null) character.gender,
-                            if (character.voiceDescription != null)
-                              character.voiceDescription,
-                          ].join(', '),
-                          style: const TextStyle(
-                            color: AppColors.textMedium,
-                            fontSize: 12,
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              final description = [
+                                if (character.gender != null) character.gender,
+                                if (character.voiceDescription != null)
+                                  character.voiceDescription,
+                              ].join(', ');
+                              Clipboard.setData(
+                                ClipboardData(text: description),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Character description copied to clipboard',
+                                  ),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                            child: const Icon(
+                              Icons.content_copy,
+                              size: 16,
+                              color: AppColors.textMedium,
+                            ),
+                          ),
+                        ],
                       ),
                   ],
                 ),

@@ -228,17 +228,40 @@ class _MetadataItem extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: value));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('$label copied to clipboard'),
-                    duration: const Duration(seconds: 1),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: value));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$label copied to clipboard'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    child: Text(value, style: const TextStyle(fontSize: 14)),
                   ),
-                );
-              },
-              child: Text(value, style: const TextStyle(fontSize: 14)),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: value));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('$label copied to clipboard'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  child: const Icon(
+                    Icons.content_copy,
+                    size: 16,
+                    color: AppColors.textMedium,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
