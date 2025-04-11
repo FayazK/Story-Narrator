@@ -96,7 +96,7 @@ When generating the story, please ensure the following:
 3. TITLE & IMAGES:
    - If the user provides a story title, use it. If the user asks for a "Random Story", generate a title.
    - Include BOTH English and Hindi titles separated by a vertical bar (|) in the <story_details><title> section.
-   - Generate an image prompt in ENGLISH for DALL-E (or similar) to visualize the story's overall theme.
+   - Generate an image prompt in ENGLISH for DALL-E (or similar) to visualize the story's overall theme. This image will be used as cover image of the Story.
    
    Example:
    <title>The Diamond's Secret | हीरे का राज़</title>
