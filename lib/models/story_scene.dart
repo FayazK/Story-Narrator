@@ -9,6 +9,7 @@ class StoryScene {
   final String? characterActions;
   final String? backgroundSound;
   final String? soundEffects;
+  final String? imagePrompt; // User-defined prompt focus for image generation
   final List<Script> scripts;
 
   StoryScene({
@@ -19,6 +20,7 @@ class StoryScene {
     this.characterActions,
     this.backgroundSound,
     this.soundEffects,
+    this.imagePrompt,
     this.scripts = const [],
   });
 
@@ -71,6 +73,8 @@ class StoryScene {
     bool clearBackgroundSound = false,
     String? soundEffects,
     bool clearSoundEffects = false,
+    String? imagePrompt,
+    bool clearImagePrompt = false,
     List<Script>? scripts,
   }) {
     return StoryScene(
@@ -81,6 +85,7 @@ class StoryScene {
       characterActions: clearCharacterActions ? null : (characterActions ?? this.characterActions),
       backgroundSound: clearBackgroundSound ? null : (backgroundSound ?? this.backgroundSound),
       soundEffects: clearSoundEffects ? null : (soundEffects ?? this.soundEffects),
+      imagePrompt: clearImagePrompt ? null : (imagePrompt ?? this.imagePrompt),
       scripts: scripts ?? this.scripts,
     );
   }

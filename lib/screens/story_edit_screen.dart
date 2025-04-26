@@ -5,7 +5,8 @@ import '../database/database_helper.dart';
 import '../models/story.dart';
 import '../models/character.dart';
 import '../models/script.dart';
-import '../services/elevenlabs_api_service.dart'; // Changed import
+import '../services/elevenlabs_api_service.dart';
+import '../services/gemini_service.dart'; // Added import
 import '../utils/ui/app_colors.dart';
 import '../utils/ui/content_container.dart';
 import 'package:path_provider/path_provider.dart';
@@ -23,8 +24,8 @@ class StoryEditScreen extends StatefulWidget {
 
 class _StoryEditScreenState extends State<StoryEditScreen> {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
-  final ElevenlabsApiService _elevenLabsService =
-      ElevenlabsApiService(); // Changed type
+  final ElevenlabsApiService _elevenLabsService = ElevenlabsApiService();
+  final GeminiService _geminiService = GeminiService(); // Added instance
 
   Story? _story;
   bool _isLoading = true;
@@ -258,6 +259,9 @@ class _StoryEditScreenState extends State<StoryEditScreen> {
                                 scene: _story!.scenes[_selectedSceneIndex],
                                 characters: _story!.characters,
                                 onGenerateVoice: _handleVoiceGeneration,
+                                storyTitle: _story!.title, // Added
+                                dbHelper: _databaseHelper, // Added
+                                geminiService: _geminiService, // Added
                               ),
                           ],
                         ),

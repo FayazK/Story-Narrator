@@ -10,6 +10,7 @@ import '../models/character.dart';
 import '../models/story_scene.dart';
 import '../models/script.dart';
 import '../models/voice.dart';
+import '../models/scene_image.dart'; // Import the new model
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -34,7 +35,7 @@ class DatabaseHelper {
     
     return await openDatabase(
       dbPath,
-      version: 4, // Increased version number to add voices table
+      version: 5, // Increased version number to add scene_images table
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
@@ -79,6 +80,27 @@ class DatabaseHelper {
         debugPrint('Created voices table');
       } catch (e) {
         debugPrint('Error creating voices table: $e');
+      }
+    }
+
+    if (oldVersion < 5) {
+      // Migration to version 5: Add scene_images table
+      try {
+        await db.execute('''
+          CREATE TABLE scene_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            scene_id INTEGER NOT NULL,
+            prompt TEXT NOT NULL,
+            image_path TEXT, -- Nullable
+            FOREIGN KEY (scene_id) REFERENCES scenes (id) ON DELETE CASCADE
+          )
+        ''');
+        debugPrint('Created scene_images table');
+
+        await db.execute('CREATE INDEX idx_scene_images_scene_id ON scene_images (scene_id)');
+        debugPrint('Created index idx_scene_images_scene_id on scene_images table');
+      } catch (e) {
+        debugPrint('Error creating scene_images table or index: $e');
       }
     }
   }
@@ -536,6 +558,77 @@ class DatabaseHelper {
       );
     } catch (e) {
       debugPrint('Error removing voice: $e');
+      rethrow;
+    }
+  }
+
+  // SceneImage CRUD operations
+
+  /// Get all scene images associated with a specific scene ID
+  Future<List<SceneImage>> getSceneImagesBySceneId(int sceneId) async {
+    final Database db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'scene_images',
+        where: 'scene_id = ?',
+        whereArgs: [sceneId],
+        orderBy: 'id ASC', // Or order as needed, e.g., by creation time if added
+      );
+
+      return List.generate(maps.length, (i) {
+        return SceneImage.fromMap(maps[i]);
+      });
+    } catch (e) {
+      debugPrint('Error getting scene images by scene ID $sceneId: $e');
+      return []; // Return empty list on error
+    }
+  }
+
+  /// Insert a new scene image record
+  Future<int> insertSceneImage(SceneImage sceneImage) async {
+    final Database db = await database;
+    try {
+      return await db.insert(
+        'scene_images',
+        sceneImage.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace, // Or fail/ignore as needed
+      );
+    } catch (e) {
+      debugPrint('Error inserting scene image: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete a scene image record by its ID
+  Future<int> deleteSceneImage(int id) async {
+    final Database db = await database;
+    try {
+      return await db.delete(
+        'scene_images',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } catch (e) {
+      debugPrint('Error deleting scene image with ID $id: $e');
+      rethrow;
+    }
+  }
+
+  /// Update a scene image record (e.g., update image_path)
+  Future<int> updateSceneImage(SceneImage sceneImage) async {
+    final Database db = await database;
+    if (sceneImage.id == null) {
+      throw ArgumentError("Cannot update a SceneImage without an ID.");
+    }
+    try {
+      return await db.update(
+        'scene_images',
+        sceneImage.toMap(), // Ensure toMap doesn't include ID if not needed for update
+        where: 'id = ?',
+        whereArgs: [sceneImage.id],
+      );
+    } catch (e) {
+      debugPrint('Error updating scene image with ID ${sceneImage.id}: $e');
       rethrow;
     }
   }
