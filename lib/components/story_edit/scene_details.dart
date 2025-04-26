@@ -5,6 +5,7 @@ import '../../models/script.dart';
 import '../../models/character.dart';
 import '../../models/scene_image.dart'; // Added
 import '../../database/database_helper.dart'; // Added
+import 'package:xml/xml.dart'; // Added for XML parsing
 import '../../services/gemini_service.dart'; // Added
 import '../../prompts/scene_image_generation_prompt.dart'; // Added
 import '../../utils/ui/app_colors.dart';
@@ -341,13 +342,61 @@ Character Actions: $characterActions
       );
 
       if (!mounted) return;
-      setState(() {
-        print( response); // Debugging line
-        _geminiResponse = response; // Store the raw response
-        _isLoading = false;
-      });
 
-    } catch (e) {
+      // 1. Clean the response
+      String cleanedResponse = response
+          .replaceAll(RegExp(r'^```(?:xml)?\s*|\s*```$'), '') // Remove markdown fences
+          .trim();
+
+      // 2. Parse XML and Extract Prompts
+      List<SceneImage> newImages = [];
+      try {
+        final document = XmlDocument.parse(cleanedResponse);
+        final promptsElement = document.findElements('prompts').firstOrNull;
+        if (promptsElement != null) {
+          final promptElements = promptsElement.findElements('prompt');
+          for (var promptElement in promptElements) {
+            final promptText = promptElement.innerText.trim();
+            if (promptText.isNotEmpty) {
+              newImages.add(SceneImage(
+                sceneId: widget.scene.id!,
+                prompt: promptText,
+                // imagePath and other fields will be null initially
+              ));
+            }
+          }
+        } else {
+          throw Exception('Could not find <prompts> tag in the response.');
+        }
+
+        // 3. Insert into Database
+        if (newImages.isNotEmpty) {
+          for (var image in newImages) {
+            await widget.dbHelper.insertSceneImage(image);
+            if (!mounted) return; // Check mounted status after each async operation
+          }
+          // 4. Refresh data on success
+          await _fetchData(); // Re-fetch to show the newly added images
+        } else {
+           // If no prompts were extracted, still stop loading
+           if (!mounted) return;
+           setState(() {
+             _isLoading = false;
+             // Optionally set an error or message if no prompts found
+             _error = 'No valid image prompts were generated.';
+           });
+        }
+
+      } catch (parseOrDbError) {
+        // Handle parsing or DB errors
+        if (!mounted) return;
+        setState(() {
+          _error = 'Error processing suggestions: ${parseOrDbError.toString()}';
+          _isLoading = false;
+        });
+      }
+
+    } catch (e) { // Catch errors from the Gemini API call itself
       if (!mounted) return;
       setState(() {
         _error = 'Error generating suggestions: ${e.toString()}';
@@ -390,17 +439,38 @@ Character Actions: $characterActions
         children: [
           const Text("Existing Image Prompts:", style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Expanded( // Make list scrollable if needed
-            child: ListView.builder(
+          Expanded( // Make list scrollable
+            child: ListView.separated( // Use separated for dividers
               shrinkWrap: true,
               itemCount: _existingImages!.length,
+              separatorBuilder: (context, index) => const Divider(height: 1), // Add dividers
               itemBuilder: (context, index) {
                 final img = _existingImages![index];
                 // TODO: Optionally display image if img.imagePath is valid
-                return ListTile(
-                  title: Text(img.prompt),
-                  subtitle: img.imagePath != null ? Text('Path: ${img.imagePath}') : null,
-                  dense: true,
+                return Padding( // Add padding around each item
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: ListTile(
+                    title: Text(
+                      img.prompt,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    // subtitle: img.imagePath != null ? Text('Path: ${img.imagePath}', style: Theme.of(context).textTheme.bodySmall) : null,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.content_copy, size: 20.0),
+                      tooltip: 'Copy Prompt',
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: img.prompt));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Prompt copied to clipboard'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      },
+                    ),
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0), // Adjust padding
+                  ),
                 );
               },
             ),
@@ -423,8 +493,8 @@ Character Actions: $characterActions
          ],
        );
     }
-    // Should not happen if logic is correct, but as a fallback:
-    return const Text('No suggestions available.');
+    // Fallback if no existing images and no error/loading state
+    return const Center(child: Text('No suggestions generated or available.'));
   }
 }
 
