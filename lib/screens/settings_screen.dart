@@ -5,6 +5,7 @@ import '../utils/secure_storage.dart';
 import '../utils/ui/app_colors.dart';
 import '../components/settings/index.dart';
 import '../components/settings/voices/user_voices_content.dart'; // User voices
+import '../components/settings/storage_management_content.dart'; // Storage Management
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -307,10 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.keyboard,
         );
       case 5: // Index shifted from 6 to 5
-        return const PlaceholderContent(
-          title: 'Storage Management',
-          icon: Icons.storage,
-        );
+        return const StorageManagementContent();
       case 6: // Index shifted from 7 to 6
         return const AboutContent();
       default:

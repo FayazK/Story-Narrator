@@ -22,6 +22,7 @@ dependencies:
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
   just_audio: ^0.9.30
+  url_launcher: ^6.0.0 # Add url_launcher for opening URLs and files
 
 dev_dependencies:
   flutter_test:
