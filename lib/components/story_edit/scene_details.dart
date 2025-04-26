@@ -334,7 +334,7 @@ Character Actions: $characterActions
       // Call Gemini Service - IMPORTANT: Assuming generateStory returns raw text here
       // If generateStory strictly returns cleaned XML, GeminiService needs modification
       // or a new method. For now, proceed with this assumption.
-      final response = await widget.geminiService.generateStory(
+      final response = await widget.geminiService.generateImagePrompts(
         sceneImageGenerationSystemPrompt, // Use the specific system prompt
         userPrompt,
         // No storyId needed here as we are not saving the response to the story table
@@ -342,6 +342,7 @@ Character Actions: $characterActions
 
       if (!mounted) return;
       setState(() {
+        print( response); // Debugging line
         _geminiResponse = response; // Store the raw response
         _isLoading = false;
       });

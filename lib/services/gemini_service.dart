@@ -71,6 +71,50 @@ class GeminiService {
     }
   }
 
+  Future<String> generateImagePrompts(
+    String systemPrompt,
+    String userMessage, {
+    int? storyId,
+  }) async {
+    try {
+      // Get API key from storage
+      final apiKey = await SecureStorageManager.getGeminiApiKey();
+
+      if (apiKey == null || apiKey.isEmpty) {
+        throw Exception(
+          'Gemini API key not found. Please add your API key in the settings.',
+        );
+      }
+
+      // Trim API key to remove any leading/trailing spaces
+      final trimmedApiKey = apiKey.trim();
+
+      // Get selected model or use default
+      String modelName = 'gemini-2.0-flash';
+
+      // Initialize the Gemini API with system instructions
+      final model = GenerativeModel(
+        model: modelName,
+        apiKey: trimmedApiKey,
+        systemInstruction: Content.system(systemPrompt),
+      );
+
+      // Send the user message and get response
+      final response = await model.generateContent([Content.text(userMessage)]);
+
+      // Extract the story text from the response
+      final promptText = response.text;
+
+      if (promptText == null || promptText.isEmpty) {
+        throw Exception('Generated Prompts is empty');
+      }
+
+      return promptText;
+    } catch (e) {
+      rethrow;
+    }
+  } // generateImagePrompts
+
   /// Update the AI response for an existing story
   Future<int> updateAiResponse(int storyId, String aiResponse) async {
     final dbHelper = DatabaseHelper();
@@ -82,7 +126,7 @@ class GeminiService {
     try {
       // Extract just the XML part
       final cleanedXml = _cleanAiResponse(xmlString);
-      
+
       // Import the story XML
       final storyId = await _storyService.importStoryFromXml(cleanedXml);
 
