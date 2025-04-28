@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../utils/ui/app_colors.dart';
 import '../screens/story_edit_screen.dart';
 import '../utils/helpers/story_generator_helper.dart';
+import '../prompts/story_generation_prompt.dart'; // Default prompt
+import '../prompts/story_generation_prompt_en.dart'; // English prompt
 import '../components/story_create/story_idea_section.dart';
 import '../components/story_create/story_config_section.dart';
 import '../components/story_create/bottom_action_bar.dart';
@@ -25,6 +27,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   String? _selectedSetting;
   bool _isHistorical = false;
   String _characterInformation = '';
+  String _selectedLanguage = 'English'; // Default to English
   bool _isGenerating = false;
   bool _isApiConfigured = false;
   int? _generatedStoryId;
@@ -206,10 +209,16 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
     );
 
     try {
+      // Determine the system prompt based on selected language
+      final String systemPrompt = _selectedLanguage == 'English'
+          ? StoryGenerationPromptEn.getSystemPrompt()
+          : StoryGenerationPrompt.getSystemPrompt();
+
       // Generate the story with progress tracking
       final int storyId = await StoryGeneratorHelper.generateStory(
         storyIdea: _storyIdeaController.text,
         title: _titleController.text,
+        systemPrompt: systemPrompt, // Pass the selected prompt
         genre: _selectedGenre,
         era: _selectedEra,
         setting: _selectedSetting,
@@ -328,9 +337,50 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             // Story Configuration Section - 40% width
             Expanded(
               flex: 4,
-              child: StoryConfigSection(
-                selectedGenre: _selectedGenre,
-                selectedEra: _selectedEra,
+              child: SingleChildScrollView( // Wrap in SingleChildScrollView if content might overflow
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Language Selection Toggle
+                    Text(
+                      'Story Language',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ToggleButtons(
+                      isSelected: [_selectedLanguage == 'English', _selectedLanguage == 'Urdu'],
+                      onPressed: (int index) {
+                        setState(() {
+                          _selectedLanguage = index == 0 ? 'English' : 'Urdu';
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(8.0),
+                      selectedBorderColor: AppColors.primary,
+                      selectedColor: Colors.white,
+                      fillColor: AppColors.primary,
+                      color: AppColors.primary,
+                      constraints: const BoxConstraints(minHeight: 40.0, minWidth: 100.0),
+                      children: const <Widget>[
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text('English'),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text('Urdu'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24), // Add spacing before the next section
+
+                    // Existing Config Section
+                    StoryConfigSection(
+                      selectedGenre: _selectedGenre,
+                      selectedEra: _selectedEra,
                 selectedSetting: _selectedSetting,
                 isHistorical: _isHistorical,
                 characterInformation: _characterInformation,
@@ -338,7 +388,10 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 onEraChanged: (value) => setState(() => _selectedEra = value),
                 onSettingChanged: (value) => setState(() => _selectedSetting = value),
                 onHistoricalChanged: (value) => setState(() => _isHistorical = value),
-                onCharacterInfoChanged: (value) => setState(() => _characterInformation = value),
+                      onCharacterInfoChanged: (value) => setState(() => _characterInformation = value),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

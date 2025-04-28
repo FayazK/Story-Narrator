@@ -73,6 +73,7 @@ class StoryGeneratorHelper {
     String? setting,
     bool isHistorical = false,
     String? characterInformation,
+    required String systemPrompt, // Add this required parameter
     bool isCancelled = false, // Flag to check if generation was cancelled
     Function(double)? onProgress, // Callback to report progress
   }) async {
@@ -121,15 +122,12 @@ class StoryGeneratorHelper {
         characterInformation: characterInformation,
       );
 
-      // Get the system prompt
-      final String systemPrompt = StoryGenerationPrompt.getSystemPrompt();
-
       // Report progress before API call
       onProgress?.call(0.3);
 
       // Generate the story with the storyId to save the AI response
       await geminiService.generateStory(
-        systemPrompt,
+        systemPrompt, // Use the passed parameter
         userMessage,
         storyId: storyId,
       );
